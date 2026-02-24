@@ -7,8 +7,8 @@ import { ShareMenu } from "@/components/ShareMenu";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getDreamBySlug, getDreams } from "@/lib/dreams";
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const dream = getDreamBySlug(params.slug);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const dream = await getDreamBySlug(params.slug);
   if (!dream) return {};
   return {
     title: dream.title,
@@ -25,12 +25,12 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-function relatedDreams(slug: string) {
-  const current = getDreamBySlug(slug);
+async function relatedDreams(slug: string) {
+  const current = await getDreamBySlug(slug);
   if (!current) return [];
   const themes = new Set(current.themes);
 
-  return getDreams()
+  return (await getDreams())
     .filter((d) => d.slug !== slug)
     .map((d) => {
       const shared = d.themes.filter((t) => themes.has(t)).length;
@@ -42,11 +42,11 @@ function relatedDreams(slug: string) {
     .map((x) => x.d);
 }
 
-export default function DreamPage({ params }: { params: { slug: string } }) {
-  const dream = getDreamBySlug(params.slug);
+export default async function DreamPage({ params }: { params: { slug: string } }) {
+  const dream = await getDreamBySlug(params.slug);
   if (!dream) notFound();
 
-  const related = relatedDreams(dream.slug);
+  const related = await relatedDreams(dream.slug);
 
   return (
     <div className="min-h-screen bg-background">

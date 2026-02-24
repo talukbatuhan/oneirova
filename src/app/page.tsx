@@ -21,9 +21,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  const trending = getTrendingDreams(8);
-  const latest = getLatestDreams(6);
+export default async function Home() {
+  const trending = await getTrendingDreams(8);
+  const latest = await getLatestDreams(6);
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
 
   return (

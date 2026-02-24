@@ -1,3 +1,6 @@
+import { isSupabaseConfigured } from "./supabase/config";
+import { createSupabaseServerClient } from "./supabase/server";
+
 export type DreamSection = {
   title: string;
   body: string[];
@@ -530,21 +533,73 @@ const dreams: DreamEntry[] = [
   },
 ];
 
-export function getDreams(): DreamEntry[] {
-  return dreams;
+type DreamRow = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  themes: string[];
+  updated_at: string | null;
+  quick_meaning: string[] | null;
+  sections: DreamSection[] | null;
+};
+
+function toIsoDate(value: string | null): string {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toISOString().slice(0, 10);
 }
 
-export function getDreamBySlug(slug: string): DreamEntry | undefined {
-  return dreams.find((d) => d.slug === slug);
+function toDreamEntry(row: DreamRow): DreamEntry {
+  return {
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    themes: Array.isArray(row.themes) ? row.themes : [],
+    updatedAt: toIsoDate(row.updated_at),
+    quickMeaning: Array.isArray(row.quick_meaning) ? row.quick_meaning : [],
+    sections: Array.isArray(row.sections) ? row.sections : [],
+  };
 }
 
-export function getLatestDreams(limit: number): DreamEntry[] {
-  return [...dreams]
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    .slice(0, limit);
+export async function getDreams(): Promise<DreamEntry[]> {
+  if (!isSupabaseConfigured()) return dreams;
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("dreams")
+    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections");
+  if (error) throw error;
+  return (data ?? []).map((r) => toDreamEntry(r as DreamRow));
 }
 
-export function getTrendingDreams(limit: number): DreamEntry[] {
+export async function getDreamBySlug(slug: string): Promise<DreamEntry | undefined> {
+  if (!isSupabaseConfigured()) return dreams.find((d) => d.slug === slug);
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("dreams")
+    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return undefined;
+  return toDreamEntry(data as DreamRow);
+}
+
+export async function getLatestDreams(limit: number): Promise<DreamEntry[]> {
+  if (!isSupabaseConfigured()) {
+    return [...dreams].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, limit);
+  }
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("dreams")
+    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((r) => toDreamEntry(r as DreamRow));
+}
+
+export async function getTrendingDreams(limit: number): Promise<DreamEntry[]> {
   const curated = [
     "teeth-falling-out",
     "being-chased",
@@ -557,16 +612,29 @@ export function getTrendingDreams(limit: number): DreamEntry[] {
     "death",
   ];
 
-  const picked = curated
-    .map((slug) => getDreamBySlug(slug))
-    .filter((d): d is DreamEntry => Boolean(d));
+  if (!isSupabaseConfigured()) {
+    const picked = curated
+      .map((slug) => dreams.find((d) => d.slug === slug))
+      .filter((d): d is DreamEntry => Boolean(d));
+    return picked.slice(0, limit);
+  }
 
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("dreams")
+    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections")
+    .in("slug", curated);
+  if (error) throw error;
+
+  const bySlug = new Map<string, DreamEntry>((data ?? []).map((r) => [r.slug, toDreamEntry(r as DreamRow)]));
+  const picked = curated.map((slug) => bySlug.get(slug)).filter((d): d is DreamEntry => Boolean(d));
   return picked.slice(0, limit);
 }
 
-export function getDreamThemes(): string[] {
+export async function getDreamThemes(): Promise<string[]> {
+  const list = await getDreams();
   const set = new Set<string>();
-  for (const dream of dreams) for (const t of dream.themes) set.add(t);
+  for (const dream of list) for (const t of dream.themes) set.add(t);
   return [...set].sort((a, b) => a.localeCompare(b));
 }
 
@@ -585,9 +653,8 @@ function indexLetter(value: string): string {
   return map[ch] ?? ch;
 }
 
-export function getDreamsByLetter(letter: string): DreamEntry[] {
+export async function getDreamsByLetter(letter: string): Promise<DreamEntry[]> {
   const l = letter.trim().slice(0, 1).toLowerCase();
-  return dreams
-    .filter((d) => indexLetter(d.title) === l)
-    .sort((a, b) => a.title.localeCompare(b.title));
+  const list = await getDreams();
+  return list.filter((d) => indexLetter(d.title) === l).sort((a, b) => a.title.localeCompare(b.title));
 }

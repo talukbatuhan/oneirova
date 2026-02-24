@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SearchPage({
+export default async function SearchPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
@@ -27,8 +27,8 @@ export default function SearchPage({
   const q = typeof searchParams?.q === "string" ? searchParams.q : "";
   const theme = typeof searchParams?.theme === "string" ? searchParams.theme : "";
 
-  const results = q ? searchDreams(q, { theme, limit: 100 }) : [];
-  const themes = getDreamThemes();
+  const results = q ? await searchDreams(q, { theme, limit: 100 }) : [];
+  const themes = await getDreamThemes();
 
   return (
     <div className="min-h-screen bg-background">

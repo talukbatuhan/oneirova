@@ -27,11 +27,11 @@ export function generateMetadata({ params }: { params: { letter: string } }): Me
   };
 }
 
-export default function BrowseLetterPage({ params }: { params: { letter: string } }) {
+export default async function BrowseLetterPage({ params }: { params: { letter: string } }) {
   const letter = (params.letter ?? "").slice(0, 1).toLowerCase();
   if (!letter.match(/^[a-z]$/)) notFound();
 
-  const dreams = getDreamsByLetter(letter);
+  const dreams = await getDreamsByLetter(letter);
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
 
   return (

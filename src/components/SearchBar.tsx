@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { suggestDreams } from "@/lib/search";
 
 type Variant = "hero" | "compact";
+type Suggestion = { slug: string; title: string; excerpt: string; themes: string[] };
 
 export function SearchBar({
   variant = "hero",
@@ -21,13 +21,39 @@ export function SearchBar({
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
-
-  const suggestions = useMemo(() => suggestDreams(query, 7), [query]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!autoFocus) return;
     inputRef.current?.focus();
   }, [autoFocus]);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      setSuggestions([]);
+      return;
+    }
+
+    const t = window.setTimeout(async () => {
+      abortRef.current?.abort();
+      const ac = new AbortController();
+      abortRef.current = ac;
+      try {
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}&limit=7`, { signal: ac.signal });
+        if (!res.ok) return;
+        const data = (await res.json()) as Suggestion[];
+        setSuggestions(Array.isArray(data) ? data : []);
+      } catch {
+        if (!ac.signal.aborted) setSuggestions([]);
+      }
+    }, 140);
+
+    return () => window.clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {

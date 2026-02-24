@@ -42,16 +42,13 @@ export type SearchOptions = {
   limit?: number;
 };
 
-export function searchDreams(query: string, options: SearchOptions = {}): DreamEntry[] {
+export async function searchDreams(query: string, options: SearchOptions = {}): Promise<DreamEntry[]> {
   const q = normalize(query);
   const theme = options.theme ? normalize(options.theme) : "";
   const limit = options.limit ?? 50;
 
-  let pool = getDreams();
-  if (theme) {
-    pool = pool.filter((d) => normalize(d.themes.join(" ")).includes(theme));
-  }
-
+  let pool = await getDreams();
+  if (theme) pool = pool.filter((d) => normalize(d.themes.join(" ")).includes(theme));
   if (!q) return pool.slice(0, limit);
 
   return pool
@@ -62,7 +59,7 @@ export function searchDreams(query: string, options: SearchOptions = {}): DreamE
     .map((x) => x.d);
 }
 
-export function suggestDreams(query: string, limit: number = 6): DreamEntry[] {
+export async function suggestDreams(query: string, limit: number = 6): Promise<DreamEntry[]> {
   const q = normalize(query);
   if (!q) return [];
   return searchDreams(q, { limit });

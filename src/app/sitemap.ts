@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getDreams } from "@/lib/dreams";
 import { testPages } from "@/lib/test-pages";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -21,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  const dreamRoutes: MetadataRoute.Sitemap = getDreams().map((d) => ({
+  const dreamRoutes: MetadataRoute.Sitemap = (await getDreams()).map((d) => ({
     url: `https://oneirova.com/dream/${d.slug}`,
     lastModified: new Date(d.updatedAt),
     changeFrequency: "monthly",
@@ -37,4 +37,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...staticRoutes, ...browseRoutes, ...dreamRoutes, ...testRoutes];
 }
-
