@@ -4,23 +4,45 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { cmsGetDream } from "@/lib/cms/dreams";
 import { deleteDreamAction, saveDreamAction } from "@/app/admin/actions";
 
-function toLines(value: unknown): string {
-  if (!Array.isArray(value)) return "";
-  return value
-    .map((x) => String(x ?? "").trim())
-    .filter(Boolean)
-    .join("\n");
-}
+type AdminEditDreamSearchParams = { [key: string]: string | string[] | undefined };
 
-export default async function EditDreamPage({ params }: { params: { slug: string } }) {
-  const dream = await cmsGetDream(params.slug);
+type AdminEditDreamParams = { slug: string };
 
-  const slug = String(dream?.slug ?? params.slug);
+export default async function EditDreamPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<AdminEditDreamParams>;
+  searchParams?: Promise<AdminEditDreamSearchParams>;
+}) {
+  const p = await params;
+  const sp = (await searchParams) ?? {};
+
+  const dream = await cmsGetDream(p.slug);
+
+  const slug = String(dream?.slug ?? p.slug);
   const title = String(dream?.title ?? "");
   const excerpt = String(dream?.excerpt ?? "");
-  const themes = toLines(dream?.themes);
-  const quickMeaning = toLines(dream?.quick_meaning);
-  const sections = JSON.stringify(dream?.sections ?? [], null, 2);
+
+  const payload = JSON.stringify(
+    {
+      slug,
+      title,
+      excerpt,
+      status: dream?.status ?? "draft",
+      publishedAt: dream?.published_at ?? null,
+      coverImageUrl: dream?.cover_image_url ?? null,
+      ogImageUrl: dream?.og_image_url ?? null,
+      seo: dream?.seo ?? {},
+      themes: Array.isArray(dream?.themes) ? dream.themes : [],
+      quickMeaning: Array.isArray(dream?.quick_meaning) ? dream.quick_meaning : [],
+      sections: Array.isArray(dream?.sections) ? dream.sections : [],
+    },
+    null,
+    2,
+  );
+
+  const err = typeof sp.err === "string" ? sp.err : "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,7 +57,7 @@ export default async function EditDreamPage({ params }: { params: { slug: string
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href={`/dream/${encodeURIComponent(slug)}`}
+                  href={`/ruya/${encodeURIComponent(slug)}?preview=1`}
                   className="rounded-xl border border-border bg-surface px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground"
                 >
                   Önizle
@@ -46,84 +68,17 @@ export default async function EditDreamPage({ params }: { params: { slug: string
               </div>
             </div>
 
+            {err ? <div className="mt-4 text-sm text-muted">{err}</div> : null}
+
             <form action={saveDreamAction} className="mt-6 space-y-6">
-              <section className="rounded-2xl border border-border bg-surface px-6 py-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">Slug</label>
-                    <input
-                      name="slug"
-                      defaultValue={slug}
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">Başlık</label>
-                    <input
-                      name="title"
-                      defaultValue={title}
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-foreground">Özet</label>
-                  <textarea
-                    name="excerpt"
-                    rows={3}
-                    defaultValue={excerpt}
-                    className={[
-                      "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                      "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                    ].join(" ")}
-                  />
-                </div>
-              </section>
+              <input type="hidden" name="returnTo" value={`/admin/dreams/${encodeURIComponent(slug)}`} />
 
               <section className="rounded-2xl border border-border bg-surface px-6 py-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">Temalar (satır satır)</label>
-                    <textarea
-                      name="themes"
-                      rows={6}
-                      defaultValue={themes}
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">
-                      Hızlı anlam (satır satır)
-                    </label>
-                    <textarea
-                      name="quickMeaning"
-                      rows={6}
-                      defaultValue={quickMeaning}
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-border bg-surface px-6 py-6">
-                <label className="block text-sm font-medium text-foreground">Bölümler (JSON)</label>
+                <label className="block text-sm font-medium text-foreground">JSON (tam içerik)</label>
                 <textarea
-                  name="sections"
-                  rows={18}
-                  defaultValue={sections}
+                  name="payload"
+                  rows={28}
+                  defaultValue={payload}
                   className={[
                     "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 font-mono text-xs text-foreground",
                     "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",

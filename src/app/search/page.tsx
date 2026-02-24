@@ -19,13 +19,16 @@ export const metadata: Metadata = {
   },
 };
 
+type SearchPageParams = { [key: string]: string | string[] | undefined };
+
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<SearchPageParams>;
 }) {
-  const q = typeof searchParams?.q === "string" ? searchParams.q : "";
-  const theme = typeof searchParams?.theme === "string" ? searchParams.theme : "";
+  const sp = (await searchParams) ?? {};
+  const q = typeof sp.q === "string" ? sp.q : "";
+  const theme = typeof sp.theme === "string" ? sp.theme : "";
 
   const results = q ? await searchDreams(q, { theme, limit: 100 }) : [];
   const themes = await getDreamThemes();

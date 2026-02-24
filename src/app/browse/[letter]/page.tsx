@@ -6,8 +6,11 @@ import { DreamList } from "@/components/DreamList";
 import { SiteShell } from "@/components/SiteShell";
 import { getDreamsByLetter } from "@/lib/dreams";
 
-export function generateMetadata({ params }: { params: { letter: string } }): Metadata {
-  const letter = (params.letter ?? "").slice(0, 1).toLowerCase();
+type BrowseLetterParams = { letter: string };
+
+export async function generateMetadata({ params }: { params: Promise<BrowseLetterParams> }): Promise<Metadata> {
+  const p = await params;
+  const letter = (p.letter ?? "").slice(0, 1).toLowerCase();
   if (!letter.match(/^[a-z]$/)) return {};
   const upper = letter.toUpperCase();
   const title = `${upper} Harfiyle Başlayan Rüyalar`;
@@ -27,8 +30,9 @@ export function generateMetadata({ params }: { params: { letter: string } }): Me
   };
 }
 
-export default async function BrowseLetterPage({ params }: { params: { letter: string } }) {
-  const letter = (params.letter ?? "").slice(0, 1).toLowerCase();
+export default async function BrowseLetterPage({ params }: { params: Promise<BrowseLetterParams> }) {
+  const p = await params;
+  const letter = (p.letter ?? "").slice(0, 1).toLowerCase();
   if (!letter.match(/^[a-z]$/)) notFound();
 
   const dreams = await getDreamsByLetter(letter);

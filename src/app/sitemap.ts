@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const dreamRoutes: MetadataRoute.Sitemap = (await getDreams()).map((d) => ({
-    url: `https://oneirova.com/dream/${d.slug}`,
+    url: `https://oneirova.com/ruya/${d.slug}`,
     lastModified: new Date(d.updatedAt),
     changeFrequency: "monthly",
     priority: 0.8,

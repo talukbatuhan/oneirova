@@ -6,6 +6,14 @@ export type DreamSection = {
   body: string[];
 };
 
+export type DreamSeo = {
+  seoTitle?: string;
+  seoDescription?: string;
+  canonical?: string;
+  focusKeyword?: string;
+  cluster?: string;
+};
+
 export type DreamEntry = {
   slug: string;
   title: string;
@@ -14,6 +22,9 @@ export type DreamEntry = {
   updatedAt: string;
   quickMeaning: string[];
   sections: DreamSection[];
+  coverImageUrl?: string | null;
+  ogImageUrl?: string | null;
+  seo?: DreamSeo;
 };
 
 const dreams: DreamEntry[] = [
@@ -541,6 +552,9 @@ type DreamRow = {
   updated_at: string | null;
   quick_meaning: string[] | null;
   sections: DreamSection[] | null;
+  cover_image_url: string | null;
+  og_image_url: string | null;
+  seo: unknown;
 };
 
 function toIsoDate(value: string | null): string {
@@ -548,6 +562,18 @@ function toIsoDate(value: string | null): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toISOString().slice(0, 10);
+}
+
+function toSeo(value: unknown): DreamSeo | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const v = value as any;
+  return {
+    seoTitle: typeof v.seoTitle === "string" ? v.seoTitle : undefined,
+    seoDescription: typeof v.seoDescription === "string" ? v.seoDescription : undefined,
+    canonical: typeof v.canonical === "string" ? v.canonical : undefined,
+    focusKeyword: typeof v.focusKeyword === "string" ? v.focusKeyword : undefined,
+    cluster: typeof v.cluster === "string" ? v.cluster : undefined,
+  };
 }
 
 function toDreamEntry(row: DreamRow): DreamEntry {
@@ -559,15 +585,18 @@ function toDreamEntry(row: DreamRow): DreamEntry {
     updatedAt: toIsoDate(row.updated_at),
     quickMeaning: Array.isArray(row.quick_meaning) ? row.quick_meaning : [],
     sections: Array.isArray(row.sections) ? row.sections : [],
+    coverImageUrl: row.cover_image_url ?? null,
+    ogImageUrl: row.og_image_url ?? null,
+    seo: toSeo(row.seo),
   };
 }
+
+const dreamSelect = "slug,title,excerpt,themes,updated_at,quick_meaning,sections,cover_image_url,og_image_url,seo";
 
 export async function getDreams(): Promise<DreamEntry[]> {
   if (!isSupabaseConfigured()) return dreams;
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("dreams")
-    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections");
+  const { data, error } = await supabase.from("dreams").select(dreamSelect);
   if (error) throw error;
   return (data ?? []).map((r) => toDreamEntry(r as DreamRow));
 }
@@ -575,11 +604,7 @@ export async function getDreams(): Promise<DreamEntry[]> {
 export async function getDreamBySlug(slug: string): Promise<DreamEntry | undefined> {
   if (!isSupabaseConfigured()) return dreams.find((d) => d.slug === slug);
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("dreams")
-    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections")
-    .eq("slug", slug)
-    .maybeSingle();
+  const { data, error } = await supabase.from("dreams").select(dreamSelect).eq("slug", slug).maybeSingle();
   if (error) throw error;
   if (!data) return undefined;
   return toDreamEntry(data as DreamRow);
@@ -592,7 +617,7 @@ export async function getLatestDreams(limit: number): Promise<DreamEntry[]> {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("dreams")
-    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections")
+    .select(dreamSelect)
     .order("updated_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -620,10 +645,7 @@ export async function getTrendingDreams(limit: number): Promise<DreamEntry[]> {
   }
 
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("dreams")
-    .select("slug,title,excerpt,themes,updated_at,quick_meaning,sections")
-    .in("slug", curated);
+  const { data, error } = await supabase.from("dreams").select(dreamSelect).in("slug", curated);
   if (error) throw error;
 
   const bySlug = new Map<string, DreamEntry>((data ?? []).map((r) => [r.slug, toDreamEntry(r as DreamRow)]));

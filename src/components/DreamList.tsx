@@ -22,7 +22,7 @@ export function DreamList({
         {dreams.map((d) => (
           <Link
             key={d.slug}
-            href={`/dream/${d.slug}`}
+            href={`/ruya/${d.slug}`}
             className={[
               "group rounded-2xl border border-border bg-surface/80 px-5 py-5 shadow-sm backdrop-blur-sm",
               "transition-colors hover:border-accent/60 hover:bg-surface2 hover:shadow-md",
@@ -52,7 +52,7 @@ export function DreamList({
         {dreams.map((d) => (
           <Link
             key={d.slug}
-            href={`/dream/${d.slug}`}
+            href={`/ruya/${d.slug}`}
             className={[
               "block px-5 py-4 transition-colors",
               "hover:bg-surface2",

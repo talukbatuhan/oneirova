@@ -74,7 +74,7 @@ export function SearchBar({
   }
 
   function goToDream(slug: string) {
-    router.push(`/dream/${slug}`);
+    router.push(`/ruya/${slug}`);
     setOpen(false);
     setActiveIndex(-1);
   }

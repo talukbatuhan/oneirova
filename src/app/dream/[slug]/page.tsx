@@ -1,27 +1,105 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { Container } from "@/components/Container";
 import { DreamList } from "@/components/DreamList";
 import { ShareMenu } from "@/components/ShareMenu";
 import { SiteShell } from "@/components/SiteShell";
+import { ADMIN_COOKIE_NAME } from "@/lib/admin/auth";
+import type { DreamEntry } from "@/lib/dreams";
 import { getDreamBySlug, getDreams } from "@/lib/dreams";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+async function getDreamForRequest(params: {
+  slug: string;
+  preview: boolean;
+}): Promise<DreamEntry | undefined> {
   const dream = await getDreamBySlug(params.slug);
-  if (!dream) return {};
+  if (dream) return dream;
+  if (!params.preview) return undefined;
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("dreams")
+    .select(
+      "slug,title,excerpt,themes,updated_at,quick_meaning,sections,cover_image_url,og_image_url,seo",
+    )
+    .eq("slug", params.slug)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return undefined;
+
   return {
-    title: dream.title,
-    description: dream.excerpt,
-    alternates: {
-      canonical: `/dream/${dream.slug}`,
-    },
+    slug: String((data as any).slug ?? params.slug),
+    title: String((data as any).title ?? ""),
+    excerpt: String((data as any).excerpt ?? ""),
+    themes: Array.isArray((data as any).themes) ? (data as any).themes : [],
+    updatedAt: String((data as any).updated_at ?? ""),
+    quickMeaning: Array.isArray((data as any).quick_meaning) ? (data as any).quick_meaning : [],
+    sections: Array.isArray((data as any).sections) ? (data as any).sections : [],
+    coverImageUrl: ((data as any).cover_image_url as string | null) ?? null,
+    ogImageUrl: ((data as any).og_image_url as string | null) ?? null,
+    seo:
+      (data as any).seo && typeof (data as any).seo === "object" && !Array.isArray((data as any).seo)
+        ? ((data as any).seo as any)
+        : undefined,
+  };
+}
+
+type DreamPageParams = { slug: string };
+type DreamPageSearchParams = { [key: string]: string | string[] | undefined };
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<DreamPageParams>;
+  searchParams?: Promise<DreamPageSearchParams>;
+}): Promise<Metadata> {
+  const p = await params;
+  const sp = (await searchParams) ?? {};
+
+  const jar = await cookies();
+  const isAdmin = jar.get(ADMIN_COOKIE_NAME)?.value === "1";
+  const preview = isAdmin && String(sp.preview ?? "") === "1";
+
+  const dream = await getDreamForRequest({ slug: p.slug, preview });
+  if (!dream) return {};
+
+  const canonical =
+    typeof dream.seo?.canonical === "string" && dream.seo.canonical.startsWith("/")
+      ? dream.seo.canonical
+      : `/ruya/${dream.slug}`;
+
+  const title = (dream.seo?.seoTitle ?? dream.title).trim();
+  const description = (dream.seo?.seoDescription ?? dream.excerpt).trim();
+
+  const image = dream.ogImageUrl || dream.coverImageUrl || undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
     openGraph: {
       type: "article",
-      url: `/dream/${dream.slug}`,
-      title: dream.title,
-      description: dream.excerpt,
+      url: canonical,
+      title,
+      description,
+      images: image ? [image] : undefined,
     },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+    robots: preview
+      ? {
+          index: false,
+          follow: false,
+        }
+      : undefined,
   };
 }
 
@@ -42,11 +120,25 @@ async function relatedDreams(slug: string) {
     .map((x) => x.d);
 }
 
-export default async function DreamPage({ params }: { params: { slug: string } }) {
-  const dream = await getDreamBySlug(params.slug);
+export default async function DreamPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<DreamPageParams>;
+  searchParams?: Promise<DreamPageSearchParams>;
+}) {
+  const p = await params;
+  const sp = (await searchParams) ?? {};
+
+  const jar = await cookies();
+  const isAdmin = jar.get(ADMIN_COOKIE_NAME)?.value === "1";
+  const preview = isAdmin && String(sp.preview ?? "") === "1";
+
+  const dream = await getDreamForRequest({ slug: p.slug, preview });
   if (!dream) notFound();
 
   const related = await relatedDreams(dream.slug);
+  const coverImageUrl = dream.coverImageUrl || "";
 
   return (
     <SiteShell mainClassName="pb-24 pt-10">
@@ -54,10 +146,20 @@ export default async function DreamPage({ params }: { params: { slug: string } }
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
+              {preview ? (
+                <div className="mb-5 inline-flex rounded-full border border-border bg-surface px-4 py-2 text-xs text-muted">
+                  Taslak önizleme
+                </div>
+              ) : null}
               <h1 className="text-balance text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl">
                 {dream.title}
               </h1>
               <p className="mt-4 text-pretty text-base leading-7 text-muted">{dream.excerpt}</p>
+              {coverImageUrl ? (
+                <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
+                  <img src={coverImageUrl} alt="" className="h-auto w-full" />
+                </div>
+              ) : null}
               <div className="mt-5 flex flex-wrap gap-2">
                 {dream.themes.map((t) => (
                   <Link

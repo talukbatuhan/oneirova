@@ -3,17 +3,51 @@ import { Container } from "@/components/Container";
 import { SiteHeader } from "@/components/SiteHeader";
 import { saveDreamAction } from "@/app/admin/actions";
 
-const emptySections = JSON.stringify(
-  [
-    { title: "Yaygın Yorumlar", body: [""] },
-    { title: "Detaylara Göre", body: [""] },
-    { title: "Düşünmek İçin Sorular", body: [""] },
-  ],
+const emptyPayload = JSON.stringify(
+  {
+    slug: "ruyada-araba-gormek",
+    title: "Rüyada Araba Görmek Ne Anlama Gelir?",
+    excerpt:
+      "Rüyada araba görmek; kontrol, yön ve yaşam temposuyla ilişkilendirilir. Araba sürmek, yeni araba, kaza ve bozulma gibi detaylara göre yorumları okuyun.",
+    status: "draft",
+    publishedAt: null,
+    coverImageUrl: null,
+    ogImageUrl: null,
+    seo: {
+      seoTitle: "Rüyada Araba Görmek Ne Anlama Gelir?",
+      seoDescription:
+        "Rüyada araba görmek; kontrol, yön ve yaşam temposuyla ilişkilendirilir. Araba sürmek, yeni araba, kaza ve bozulma gibi detaylara göre yorumları okuyun.",
+      canonical: "/ruya/ruyada-araba-gormek",
+      focusKeyword: "rüyada araba görmek",
+      cluster: "Ulaşım",
+    },
+    themes: ["Ulaşım", "Kontrol", "Hedefler"],
+    quickMeaning: [
+      "Hayat yönünü ve karar alma biçimini yansıtabilir.",
+      "Kontrolün sende mi yoksa dış faktörlerde mi olduğunu gösterebilir.",
+      "Arabanın durumu, kaynakların ve enerjinin bakım ihtiyacını anlatabilir.",
+    ],
+    sections: [
+      { title: "Genel Yorum", body: [""] },
+      { title: "Detaylara Göre", body: [""] },
+      { title: "Sık Sorulan Sorular (SSS)", body: [""] },
+      { title: "Sonuç", body: [""] },
+    ],
+  },
   null,
   2,
 );
 
-export default function NewDreamPage() {
+type AdminNewDreamSearchParams = { [key: string]: string | string[] | undefined };
+
+export default async function NewDreamPage({
+  searchParams,
+}: {
+  searchParams?: Promise<AdminNewDreamSearchParams>;
+}) {
+  const sp = (await searchParams) ?? {};
+  const err = typeof sp.err === "string" ? sp.err : "";
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -23,88 +57,24 @@ export default function NewDreamPage() {
             <div className="flex items-end justify-between gap-4">
               <div>
                 <h1 className="text-2xl text-foreground">Yeni içerik</h1>
-                <p className="mt-2 text-sm text-muted">Rüya içeriği oluşturun.</p>
+                <p className="mt-2 text-sm text-muted">JSON yapıştırın ve kaydedin.</p>
               </div>
               <Link href="/admin" className="text-sm text-muted transition-colors hover:text-foreground">
                 Geri
               </Link>
             </div>
 
+            {err ? <div className="mt-4 text-sm text-muted">{err}</div> : null}
+
             <form action={saveDreamAction} className="mt-6 space-y-6">
-              <section className="rounded-2xl border border-border bg-surface px-6 py-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">Slug</label>
-                    <input
-                      name="slug"
-                      placeholder="ruyada-yilan-gormek"
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">Başlık</label>
-                    <input
-                      name="title"
-                      placeholder="Rüyada Yılan Görmek"
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-foreground">Özet</label>
-                  <textarea
-                    name="excerpt"
-                    rows={3}
-                    className={[
-                      "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                      "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                    ].join(" ")}
-                  />
-                </div>
-              </section>
+              <input type="hidden" name="returnTo" value="/admin/dreams/new" />
 
               <section className="rounded-2xl border border-border bg-surface px-6 py-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">Temalar (satır satır)</label>
-                    <textarea
-                      name="themes"
-                      rows={6}
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground">
-                      Hızlı anlam (satır satır)
-                    </label>
-                    <textarea
-                      name="quickMeaning"
-                      rows={6}
-                      className={[
-                        "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground",
-                        "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
-                      ].join(" ")}
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-border bg-surface px-6 py-6">
-                <label className="block text-sm font-medium text-foreground">Bölümler (JSON)</label>
+                <label className="block text-sm font-medium text-foreground">JSON (tam içerik)</label>
                 <textarea
-                  name="sections"
-                  rows={18}
-                  defaultValue={emptySections}
+                  name="payload"
+                  rows={28}
+                  defaultValue={emptyPayload}
                   className={[
                     "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 font-mono text-xs text-foreground",
                     "outline-none focus:border-accent focus:ring-2 focus:ring-ring/30",
@@ -133,4 +103,3 @@ export default function NewDreamPage() {
     </div>
   );
 }
-

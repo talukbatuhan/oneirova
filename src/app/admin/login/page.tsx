@@ -26,13 +26,16 @@ async function loginAction(formData: FormData) {
   redirect(next);
 }
 
-export default function AdminLoginPage({
+type AdminLoginSearchParams = { [key: string]: string | string[] | undefined };
+
+export default async function AdminLoginPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<AdminLoginSearchParams>;
 }) {
-  const next = typeof searchParams?.next === "string" ? searchParams.next : "/admin";
-  const err = typeof searchParams?.err === "string" ? searchParams.err : "";
+  const sp = (await searchParams) ?? {};
+  const next = typeof sp.next === "string" ? sp.next : "/admin";
+  const err = typeof sp.err === "string" ? sp.err : "";
 
   return (
     <div className="min-h-screen bg-background">
