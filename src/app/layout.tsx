@@ -49,8 +49,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(() => { try { const t = localStorage.getItem('oneirova_theme'); const p = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; const theme = t === 'dark' || t === 'light' ? t : p; if (theme === 'dark') document.documentElement.classList.add('theme-dark'); } catch {} })();",
+          }}
+        />
         {children}
       </body>
     </html>

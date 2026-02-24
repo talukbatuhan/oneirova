@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/Container";
-import { SiteHeader } from "@/components/SiteHeader";
+import { SiteShell } from "@/components/SiteShell";
 
 export const metadata: Metadata = {
   title: "Rüyada Hamile Olduğunu Görmek",
@@ -41,11 +41,9 @@ function BulletList({ items }: { items: string[] }) {
 
 export default function RuyadaHamileOldugunuGormekPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="pb-24 pt-10">
-        <Container>
-          <div className="mx-auto max-w-3xl">
+    <SiteShell mainClassName="pb-24 pt-10">
+      <Container>
+        <div className="mx-auto max-w-3xl">
             <h1 className="text-balance text-4xl leading-[1.05] text-foreground sm:text-5xl">
               Rüyada Hamile Olduğunu Görmek
             </h1>
@@ -96,9 +94,8 @@ export default function RuyadaHamileOldugunuGormekPage() {
                 />
               </section>
             </article>
-          </div>
-        </Container>
-      </main>
-    </div>
+        </div>
+      </Container>
+    </SiteShell>
   );
 }

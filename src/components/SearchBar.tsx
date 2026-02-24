@@ -87,7 +87,7 @@ export function SearchBar({
           goToSearch(query);
         }}
         className={[
-          "relative flex w-full items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3",
+          "relative flex w-full items-center gap-3 rounded-2xl border border-border bg-surface/80 px-4 py-3 shadow-sm backdrop-blur-sm",
           "focus-within:border-accent focus-within:ring-2 focus-within:ring-ring/30",
           variant === "hero" ? "sm:px-5 sm:py-4" : "px-4 py-3",
         ].join(" ")}
@@ -145,7 +145,7 @@ export function SearchBar({
         <button
           type="submit"
           className={[
-            "rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background",
+            "rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background shadow-sm",
             "transition-colors hover:bg-foreground/90",
             variant === "compact" ? "hidden sm:block" : "",
           ].join(" ")}

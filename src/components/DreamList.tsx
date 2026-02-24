@@ -18,23 +18,23 @@ export function DreamList({
 
   if (variant === "cards") {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {dreams.map((d) => (
           <Link
             key={d.slug}
             href={`/dream/${d.slug}`}
             className={[
-              "group rounded-2xl border border-border bg-surface px-5 py-5 transition-colors",
-              "hover:border-accent/60 hover:bg-surface2",
+              "group rounded-2xl border border-border bg-surface/80 px-5 py-5 shadow-sm backdrop-blur-sm",
+              "transition-colors hover:border-accent/60 hover:bg-surface2 hover:shadow-md",
             ].join(" ")}
           >
-            <div className="text-base font-medium text-foreground">{d.title}</div>
+            <div className="text-base font-medium leading-snug text-foreground">{d.title}</div>
             <div className="mt-2 text-sm leading-6 text-muted">{d.excerpt}</div>
             <div className="mt-4 flex flex-wrap gap-2">
               {d.themes.slice(0, 2).map((t) => (
                 <span
                   key={t}
-                  className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted"
+                  className="rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted"
                 >
                   {t}
                 </span>
@@ -47,7 +47,7 @@ export function DreamList({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface/80 shadow-sm backdrop-blur-sm">
       <div className="divide-y divide-border">
         {dreams.map((d) => (
           <Link

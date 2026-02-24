@@ -45,7 +45,7 @@ export function ShareMenu({ title }: { title: string }) {
             key={l.label}
             type="button"
             onClick={copy}
-            className="rounded-full border border-border bg-surface px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+            className="rounded-full border border-border bg-surface/80 px-4 py-2 text-xs text-muted shadow-sm backdrop-blur-sm transition-colors hover:border-accent/60 hover:text-foreground"
           >
             {copied ? "Kopyalandı" : "Bağlantıyı kopyala"}
           </button>
@@ -55,7 +55,7 @@ export function ShareMenu({ title }: { title: string }) {
             href={l.href}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full border border-border bg-surface px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+            className="rounded-full border border-border bg-surface/80 px-4 py-2 text-xs text-muted shadow-sm backdrop-blur-sm transition-colors hover:border-accent/60 hover:text-foreground"
           >
             {l.label}
           </a>
