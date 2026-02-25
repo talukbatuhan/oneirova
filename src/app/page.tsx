@@ -29,11 +29,11 @@ export default async function Home() {
   return (
     <SiteShell>
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-[72ch]">
           <h1 className="text-balance text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl">
             Rüya tabirleri, yeniden düşünülmüş.
           </h1>
-          <p className="mt-4 text-pretty text-base leading-7 text-muted">
+          <p className="mt-4 text-pretty text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
             Sembol, duygu ve senaryoları modern bir rüya sözlüğünde sade bir deneyimle arayın.
           </p>
 

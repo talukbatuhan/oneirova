@@ -41,7 +41,7 @@ export default async function BrowseLetterPage({ params }: { params: Promise<Bro
   return (
     <SiteShell mainClassName="pb-24 pt-10">
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-[72ch]">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl text-foreground">{letter.toUpperCase()} harfine gözat</h1>

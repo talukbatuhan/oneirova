@@ -3,40 +3,7 @@ import { Container } from "@/components/Container";
 import { SiteHeader } from "@/components/SiteHeader";
 import { saveDreamAction } from "@/app/admin/actions";
 
-const emptyPayload = JSON.stringify(
-  {
-    slug: "ruyada-araba-gormek",
-    title: "Rüyada Araba Görmek Ne Anlama Gelir?",
-    excerpt:
-      "Rüyada araba görmek; kontrol, yön ve yaşam temposuyla ilişkilendirilir. Araba sürmek, yeni araba, kaza ve bozulma gibi detaylara göre yorumları okuyun.",
-    status: "draft",
-    publishedAt: null,
-    coverImageUrl: null,
-    ogImageUrl: null,
-    seo: {
-      seoTitle: "Rüyada Araba Görmek Ne Anlama Gelir?",
-      seoDescription:
-        "Rüyada araba görmek; kontrol, yön ve yaşam temposuyla ilişkilendirilir. Araba sürmek, yeni araba, kaza ve bozulma gibi detaylara göre yorumları okuyun.",
-      canonical: "/ruya/ruyada-araba-gormek",
-      focusKeyword: "rüyada araba görmek",
-      cluster: "Ulaşım",
-    },
-    themes: ["Ulaşım", "Kontrol", "Hedefler"],
-    quickMeaning: [
-      "Hayat yönünü ve karar alma biçimini yansıtabilir.",
-      "Kontrolün sende mi yoksa dış faktörlerde mi olduğunu gösterebilir.",
-      "Arabanın durumu, kaynakların ve enerjinin bakım ihtiyacını anlatabilir.",
-    ],
-    sections: [
-      { title: "Genel Yorum", body: [""] },
-      { title: "Detaylara Göre", body: [""] },
-      { title: "Sık Sorulan Sorular (SSS)", body: [""] },
-      { title: "Sonuç", body: [""] },
-    ],
-  },
-  null,
-  2,
-);
+const emptyPayload = "";
 
 type AdminNewDreamSearchParams = { [key: string]: string | string[] | undefined };
 

@@ -8,7 +8,7 @@ export default function NotFound() {
       <SiteHeader />
       <main className="pb-24 pt-16">
         <Container>
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto max-w-[72ch]">
             <h1 className="text-3xl text-foreground">Sayfa bulunamadı</h1>
             <p className="mt-4 text-sm leading-6 text-muted">
               Aradığınız sayfa taşınmış veya kaldırılmış olabilir.

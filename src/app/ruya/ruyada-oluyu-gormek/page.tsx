@@ -23,12 +23,12 @@ function SectionTitle({ children }: { children: string }) {
 }
 
 function Paragraph({ children }: { children: string }) {
-  return <p className="text-[15px] leading-7 text-muted">{children}</p>;
+  return <p className="text-base leading-7 text-muted sm:text-[17px] sm:leading-8">{children}</p>;
 }
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="space-y-2 text-[15px] leading-7 text-muted">
+    <ul className="space-y-2 text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
       {items.map((t) => (
         <li key={t} className="flex gap-3">
           <span className="mt-[10px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
@@ -43,7 +43,7 @@ export default function RuyadaOluyuGormekPage() {
   return (
     <SiteShell mainClassName="pb-24 pt-10">
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-[72ch]">
             <h1 className="text-balance text-4xl leading-[1.05] text-foreground sm:text-5xl">
               Rüyada Ölüyü Görmek
             </h1>

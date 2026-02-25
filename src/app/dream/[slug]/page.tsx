@@ -143,7 +143,7 @@ export default async function DreamPage({
   return (
     <SiteShell mainClassName="pb-24 pt-10">
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-[72ch]">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
               {preview ? (
@@ -154,12 +154,34 @@ export default async function DreamPage({
               <h1 className="text-balance text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl">
                 {dream.title}
               </h1>
-              <p className="mt-4 text-pretty text-base leading-7 text-muted">{dream.excerpt}</p>
-              {coverImageUrl ? (
-                <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
-                  <img src={coverImageUrl} alt="" className="h-auto w-full" />
+              <p className="mt-4 text-pretty text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
+                {dream.excerpt}
+              </p>
+
+              <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+                <div className="relative aspect-[16/9] w-full">
+                  {coverImageUrl ? (
+                    <img
+                      src={coverImageUrl}
+                      alt={dream.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "radial-gradient(900px circle at 20% 25%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 55%), radial-gradient(800px circle at 80% 30%, color-mix(in oklab, var(--accent2) 18%, transparent), transparent 58%), radial-gradient(900px circle at 55% 90%, color-mix(in oklab, var(--foreground) 10%, transparent), transparent 62%)",
+                      }}
+                    />
+                  )}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/65 via-transparent to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-border" />
                 </div>
-              ) : null}
+              </div>
+
               <div className="mt-5 flex flex-wrap gap-2">
                 {dream.themes.map((t) => (
                   <Link
@@ -177,7 +199,7 @@ export default async function DreamPage({
 
           <section className="mt-10 rounded-2xl border border-border bg-surface px-6 py-6">
             <h2 className="text-base text-foreground">Hızlı anlam</h2>
-            <ul className="mt-4 space-y-2 text-sm leading-6 text-muted">
+            <ul className="mt-4 space-y-2 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">
               {dream.quickMeaning.map((m) => (
                 <li key={m} className="flex gap-3">
                   <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
@@ -191,7 +213,7 @@ export default async function DreamPage({
             {dream.sections.map((s) => (
               <section key={s.title}>
                 <h2 className="text-lg text-foreground">{s.title}</h2>
-                <div className="mt-4 space-y-4 text-[15px] leading-7 text-muted">
+                <div className="mt-4 space-y-4 text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
                   {s.body.map((p) => (
                     <p key={p}>{p}</p>
                   ))}
