@@ -106,12 +106,26 @@ function parseDreamPayload(value: FormDataEntryValue | null, returnTo: string) {
   const statusRaw = String(parsed?.status ?? "published").trim();
   const status: CmsDreamStatus = statusRaw === "draft" || statusRaw === "published" ? statusRaw : "published";
 
-  const publishedAt = parsed?.publishedAt == null ? null : String(parsed?.publishedAt ?? "").trim() || null;
+  function normalizeOptionalField(obj: any, key: string): string | null | undefined {
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) return undefined;
+    const v = obj?.[key];
+    if (v == null) return null;
+    let s = String(v ?? "").trim();
+    if (s.startsWith("`") && s.endsWith("`") && s.length >= 2) s = s.slice(1, -1).trim();
+    return s || null;
+  }
 
-  const coverImageUrl = parsed?.coverImageUrl == null ? null : String(parsed?.coverImageUrl ?? "").trim() || null;
-  const ogImageUrl = parsed?.ogImageUrl == null ? null : String(parsed?.ogImageUrl ?? "").trim() || null;
+  const publishedAt = normalizeOptionalField(parsed, "publishedAt");
+  const coverImageUrl = normalizeOptionalField(parsed, "coverImageUrl");
+  const ogImageUrl = normalizeOptionalField(parsed, "ogImageUrl");
 
-  const seo = typeof parsed?.seo === "object" && parsed?.seo && !Array.isArray(parsed?.seo) ? (parsed.seo as any) : undefined;
+  const seo =
+    Object.prototype.hasOwnProperty.call(parsed, "seo") &&
+    typeof parsed?.seo === "object" &&
+    parsed?.seo &&
+    !Array.isArray(parsed?.seo)
+      ? (parsed.seo as any)
+      : undefined;
 
   if (!slug || !title || !excerpt) redirectWithErr(returnTo, "JSON içinde slug/title/excerpt zorunlu.");
 
