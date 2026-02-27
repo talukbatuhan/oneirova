@@ -5,7 +5,6 @@ import { DreamList } from "@/components/DreamList";
 import { SearchBar } from "@/components/SearchBar";
 import { SiteShell } from "@/components/SiteShell";
 import { getLatestDreams, getTrendingDreams } from "@/lib/dreams";
-import { testPages } from "@/lib/test-pages";
 
 export const metadata: Metadata = {
   title: "Rüya Tabirleri",
@@ -99,30 +98,6 @@ export default async function Home() {
             </div>
           </section>
         </div>
-
-        <section className="mt-14">
-          <div className="flex items-end justify-between gap-6">
-            <h2 className="text-lg text-foreground">Test sayfaları</h2>
-            <Link href={testPages[0]?.href ?? "/"} className="text-sm text-muted transition-colors hover:text-foreground">
-              Aç
-            </Link>
-          </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {testPages.map((p) => (
-              <Link
-                key={p.href}
-                href={p.href}
-                className={[
-                  "group rounded-2xl border border-border bg-surface px-5 py-5 transition-colors",
-                  "hover:border-accent/60 hover:bg-surface2",
-                ].join(" ")}
-              >
-                <div className="text-base font-medium text-foreground">{p.title}</div>
-                <div className="mt-2 text-sm leading-6 text-muted">{p.excerpt}</div>
-              </Link>
-            ))}
-          </div>
-        </section>
       </Container>
     </SiteShell>
   );

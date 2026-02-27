@@ -6,6 +6,15 @@ import { useRouter } from "next/navigation";
 type Variant = "hero" | "compact";
 type Suggestion = { slug: string; title: string; excerpt: string; themes: string[] };
 
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(t);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 export function SearchBar({
   variant = "hero",
   initialQuery = "",
@@ -19,9 +28,11 @@ export function SearchBar({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState(initialQuery);
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -30,30 +41,36 @@ export function SearchBar({
   }, [autoFocus]);
 
   useEffect(() => {
-    const q = query.trim();
+    const q = debouncedQuery.trim();
     if (!q) {
       abortRef.current?.abort();
       abortRef.current = null;
       setSuggestions([]);
+      setLoading(false);
+      setActiveIndex(-1);
       return;
     }
 
-    const t = window.setTimeout(async () => {
-      abortRef.current?.abort();
-      const ac = new AbortController();
-      abortRef.current = ac;
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    setLoading(true);
+
+    (async () => {
       try {
-        const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}&limit=7`, { signal: ac.signal });
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}&limit=8`, { signal: ac.signal });
         if (!res.ok) return;
         const data = (await res.json()) as Suggestion[];
-        setSuggestions(Array.isArray(data) ? data : []);
+        if (!ac.signal.aborted) setSuggestions(Array.isArray(data) ? data : []);
       } catch {
         if (!ac.signal.aborted) setSuggestions([]);
+      } finally {
+        if (!ac.signal.aborted) setLoading(false);
       }
-    }, 140);
+    })();
 
-    return () => window.clearTimeout(t);
-  }, [query]);
+    return () => ac.abort();
+  }, [debouncedQuery]);
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
@@ -78,6 +95,9 @@ export function SearchBar({
     setOpen(false);
     setActiveIndex(-1);
   }
+
+  const hasQuery = query.trim().length > 0;
+  const showDropdown = open && hasQuery;
 
   return (
     <div ref={rootRef} className="relative w-full">
@@ -142,6 +162,7 @@ export function SearchBar({
           autoComplete="off"
           spellCheck={false}
         />
+        {loading ? <span className="text-xs text-muted">Aranıyor…</span> : null}
         <button
           type="submit"
           className={[
@@ -154,7 +175,7 @@ export function SearchBar({
         </button>
       </form>
 
-      {open && suggestions.length > 0 ? (
+      {showDropdown ? (
         <div
           role="listbox"
           aria-label="Arama önerileri"
@@ -164,32 +185,36 @@ export function SearchBar({
           ].join(" ")}
         >
           <div className="py-2">
-            {suggestions.map((s, idx) => {
-              const active = idx === activeIndex;
-              return (
-                <button
-                  key={s.slug}
-                  role="option"
-                  aria-selected={active}
-                  onMouseEnter={() => setActiveIndex(idx)}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => goToDream(s.slug)}
-                  className={[
-                    "flex w-full items-center justify-between gap-4 px-4 py-3 text-left",
-                    active ? "bg-foreground/5" : "bg-transparent",
-                    "transition-colors",
-                  ].join(" ")}
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium text-foreground">{s.title}</div>
-                    <div className="truncate text-xs text-muted">{s.excerpt}</div>
-                  </div>
-                  <div className="hidden shrink-0 text-xs text-muted sm:block">
-                    {s.themes.slice(0, 2).join(" · ")}
-                  </div>
-                </button>
-              );
-            })}
+            {suggestions.length > 0 ? (
+              suggestions.map((s, idx) => {
+                const active = idx === activeIndex;
+                return (
+                  <button
+                    key={s.slug}
+                    role="option"
+                    aria-selected={active}
+                    onMouseEnter={() => setActiveIndex(idx)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => goToDream(s.slug)}
+                    className={[
+                      "flex w-full items-center justify-between gap-4 px-4 py-3 text-left",
+                      active ? "bg-foreground/5" : "bg-transparent",
+                      "transition-colors",
+                    ].join(" ")}
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-foreground">{s.title}</div>
+                      <div className="truncate text-xs text-muted">{s.excerpt}</div>
+                    </div>
+                    <div className="hidden shrink-0 text-xs text-muted sm:block">{s.themes.slice(0, 2).join(" · ")}</div>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-4 py-4 text-sm text-muted">
+                {loading ? "Sonuçlar hazırlanıyor…" : "Eşleşen sonuç bulunamadı. Enter ile aramayı deneyin."}
+              </div>
+            )}
           </div>
         </div>
       ) : null}

@@ -12,7 +12,27 @@ export default async function AdminHomePage({
 }) {
   const sp = (await searchParams) ?? {};
   const err = typeof sp.err === "string" ? sp.err : "";
+  const q = typeof sp.q === "string" ? sp.q : "";
   const dreams = await cmsListDreams();
+
+  const query = q.trim();
+  const tokens = query
+    ? query
+        .split(/\s+/g)
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : [];
+
+  const filtered = tokens.length
+    ? dreams.filter((d) => {
+        const hayTitle = d.title.toLocaleLowerCase("tr-TR");
+        const haySlug = d.slug.toLocaleLowerCase("tr-TR");
+        return tokens.every((t) => {
+          const needle = t.toLocaleLowerCase("tr-TR");
+          return hayTitle.includes(needle) || haySlug.includes(needle);
+        });
+      })
+    : dreams;
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,7 +44,14 @@ export default async function AdminHomePage({
               <div>
                 <h1 className="text-2xl text-foreground">Oneirova CMS</h1>
                 <p className="mt-2 text-sm text-muted">
-                  <span className="text-foreground">{dreams.length}</span> içerik
+                  <span className="text-foreground">{filtered.length}</span>{" "}
+                  {tokens.length ? (
+                    <>
+                      sonuç <span className="text-muted">/ {dreams.length} içerik</span>
+                    </>
+                  ) : (
+                    " içerik"
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -47,6 +74,39 @@ export default async function AdminHomePage({
 
             {err ? <div className="mt-4 text-sm text-muted">{err}</div> : null}
 
+            <form action="/admin" method="get" className="mt-6">
+              <label className="sr-only" htmlFor="admin-search">
+                İçerik ara
+              </label>
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+                <input
+                  id="admin-search"
+                  name="q"
+                  defaultValue={q}
+                  placeholder="Başlık veya slug ile ara"
+                  className="w-full min-w-[220px] flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <div className="flex items-center gap-2">
+                  {tokens.length ? (
+                    <Link
+                      href="/admin"
+                      className="rounded-xl border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+                    >
+                      Temizle
+                    </Link>
+                  ) : null}
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+                  >
+                    Ara
+                  </button>
+                </div>
+              </div>
+            </form>
+
             <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
               <div className="grid grid-cols-12 gap-4 border-b border-border px-5 py-3 text-xs text-muted">
                 <div className="col-span-4">Başlık</div>
@@ -55,7 +115,7 @@ export default async function AdminHomePage({
                 <div className="col-span-2 text-right">Güncelleme</div>
               </div>
               <div className="divide-y divide-border">
-                {dreams.map((d) => (
+                {filtered.map((d) => (
                   <Link
                     key={d.slug}
                     href={`/admin/dreams/${encodeURIComponent(d.slug)}`}
@@ -87,8 +147,10 @@ export default async function AdminHomePage({
                     </div>
                   </Link>
                 ))}
-                {dreams.length === 0 ? (
-                  <div className="px-5 py-10 text-sm text-muted">Henüz içerik yok.</div>
+                {filtered.length === 0 ? (
+                  <div className="px-5 py-10 text-sm text-muted">
+                    {tokens.length ? "Aramanıza uygun içerik bulunamadı." : "Henüz içerik yok."}
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -98,4 +160,3 @@ export default async function AdminHomePage({
     </div>
   );
 }
-

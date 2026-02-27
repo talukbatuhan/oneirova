@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getDreams } from "@/lib/dreams";
-import { testPages } from "@/lib/test-pages";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -21,19 +21,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  const dreamRoutes: MetadataRoute.Sitemap = (await getDreams()).map((d) => ({
-    url: `https://oneirova.com/ruya/${d.slug}`,
-    lastModified: new Date(d.updatedAt),
-    changeFrequency: "monthly",
-    priority: 0.8,
-  }));
+  const dreamRoutes: MetadataRoute.Sitemap = [];
+  if (isSupabaseConfigured()) {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("dreams")
+      .select("slug,updated_at,status")
+      .eq("status", "published")
+      .order("updated_at", { ascending: false })
+      .limit(5000);
+    if (error) throw error;
+    for (const r of data ?? []) {
+      const slug = String((r as any).slug ?? "").trim();
+      if (!slug) continue;
+      const updatedAt = String((r as any).updated_at ?? "");
+      dreamRoutes.push({
+        url: `https://oneirova.com/ruya/${encodeURIComponent(slug)}`,
+        lastModified: updatedAt ? new Date(updatedAt) : now,
+        changeFrequency: "monthly",
+        priority: 0.8,
+      });
+    }
+  }
 
-  const testRoutes: MetadataRoute.Sitemap = testPages.map((p) => ({
-    url: `https://oneirova.com${p.href}`,
-    lastModified: now,
-    changeFrequency: "monthly",
-    priority: 0.5,
-  }));
-
-  return [...staticRoutes, ...browseRoutes, ...dreamRoutes, ...testRoutes];
+  return [...staticRoutes, ...browseRoutes, ...dreamRoutes];
 }

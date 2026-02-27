@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Container } from "@/components/Container";
 import { DreamList } from "@/components/DreamList";
 import { ShareMenu } from "@/components/ShareMenu";
@@ -72,13 +73,16 @@ export async function generateMetadata({
       ? dream.seo.canonical
       : `/ruya/${dream.slug}`;
 
-  const title = (dream.seo?.seoTitle ?? dream.title).trim();
+  const baseTitle = String(dream.seo?.seoTitle ?? dream.title ?? "").trim();
+  const needsQuestion = !/(\?|ne anlama gelir|ne demek)/i.test(baseTitle);
+  const ctrTitle = `${baseTitle}${needsQuestion ? " Ne Anlama Gelir?" : ""} | Oneirova`;
+  const title = ctrTitle;
   const description = (dream.seo?.seoDescription ?? dream.excerpt).trim();
 
   const image = dream.ogImageUrl || dream.coverImageUrl || undefined;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     openGraph: {
@@ -137,13 +141,121 @@ export default async function DreamPage({
   const dream = await getDreamForRequest({ slug: p.slug, preview });
   if (!dream) notFound();
 
+  const canonicalPath =
+    typeof dream.seo?.canonical === "string" && dream.seo.canonical.startsWith("/")
+      ? dream.seo.canonical
+      : `/ruya/${dream.slug}`;
+  const canonicalUrl = `https://oneirova.com${canonicalPath}`;
+
+  const title = (dream.seo?.seoTitle ?? dream.title).trim();
+  const description = (dream.seo?.seoDescription ?? dream.excerpt).trim();
+  const image = dream.ogImageUrl || dream.coverImageUrl || "";
+
+  const faqSection = dream.sections.find((s) => {
+    const t = String(s.title ?? "").toLocaleLowerCase("tr-TR");
+    return t.includes("sss") || t.includes("sık sorulan");
+  });
+
+  const faqEntities = (faqSection?.body ?? [])
+    .map((line) => String(line ?? "").trim())
+    .filter(Boolean)
+    .map((line) => {
+      const normalized = line.replace(/\s+/g, " ").trim();
+      const qm = normalized.indexOf("?");
+      if (qm >= 0 && qm < normalized.length - 1) {
+        const q = normalized.slice(0, qm + 1).trim();
+        const a = normalized.slice(qm + 1).trim().replace(/^[:\-–—]\s*/, "");
+        if (!q || !a) return null;
+        return { q, a };
+      }
+      const colon = normalized.indexOf(":");
+      if (colon >= 0 && colon < normalized.length - 1) {
+        const q = normalized.slice(0, colon).trim();
+        const a = normalized.slice(colon + 1).trim();
+        if (!q || !a) return null;
+        return { q, a };
+      }
+      return null;
+    })
+    .filter((x): x is { q: string; a: string } => Boolean(x));
+
+  const faqJsonLd =
+    faqEntities.length >= 2
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqEntities.map((x) => ({
+            "@type": "Question",
+            name: x.q,
+            acceptedAnswer: { "@type": "Answer", text: x.a },
+          })),
+        }
+      : null;
+
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Oneirova", item: "https://oneirova.com/" },
+        { "@type": "ListItem", position: 2, name: title, item: canonicalUrl },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+      headline: title,
+      description,
+      url: canonicalUrl,
+      dateModified: dream.updatedAt ? new Date(dream.updatedAt).toISOString() : undefined,
+      image: image ? [image] : undefined,
+      keywords: dream.themes?.length ? dream.themes.join(", ") : undefined,
+      author: { "@type": "Organization", name: "Oneirova" },
+      publisher: { "@type": "Organization", name: "Oneirova" },
+    },
+    ...(faqJsonLd ? [faqJsonLd] : []),
+  ];
+
   const related = await relatedDreams(dream.slug);
   const coverImageUrl = dream.coverImageUrl || "";
+
+  function toId(input: string): string {
+    return input
+      .trim()
+      .toLocaleLowerCase("tr-TR")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  const sectionIds = new Map<string, number>();
+  const sections = dream.sections.map((s) => {
+    const base = toId(s.title) || "bolum";
+    const next = (sectionIds.get(base) ?? 0) + 1;
+    sectionIds.set(base, next);
+    const id = next === 1 ? base : `${base}-${next}`;
+    return { ...s, id };
+  });
 
   return (
     <SiteShell mainClassName="pb-24 pt-10">
       <Container>
         <div className="mx-auto max-w-[72ch]">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+          <Breadcrumbs
+            items={[
+              { label: "Ana Sayfa", href: "/" },
+              { label: "Rüya Tabirleri", href: "/browse/a" },
+              { label: dream.title },
+            ]}
+          />
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
               {preview ? (
@@ -197,6 +309,23 @@ export default async function DreamPage({
             <ShareMenu title={dream.title} />
           </div>
 
+          {sections.length >= 2 ? (
+            <section className="mt-8 rounded-2xl border border-border bg-surface px-6 py-6">
+              <div className="text-sm font-medium text-foreground">İçindekiler</div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {sections.map((s) => (
+                  <a
+                    key={s.id}
+                    href={`#${s.id}`}
+                    className="rounded-full border border-border bg-background px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+                  >
+                    {s.title}
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <section className="mt-10 rounded-2xl border border-border bg-surface px-6 py-6">
             <h2 className="text-base text-foreground">Hızlı anlam</h2>
             <ul className="mt-4 space-y-2 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">
@@ -210,8 +339,8 @@ export default async function DreamPage({
           </section>
 
           <article className="mt-10 space-y-10">
-            {dream.sections.map((s) => (
-              <section key={s.title}>
+            {sections.map((s) => (
+              <section key={s.id} id={s.id} className="scroll-mt-24">
                 <h2 className="text-lg text-foreground">{s.title}</h2>
                 <div className="mt-4 space-y-4 text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
                   {s.body.map((p) => (
@@ -224,13 +353,13 @@ export default async function DreamPage({
 
           <section className="mt-14">
             <div className="flex items-end justify-between gap-6">
-              <h2 className="text-lg text-foreground">İlgili rüyalar</h2>
+              <h2 className="text-lg text-foreground">Buna benzer rüyalar</h2>
               <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
                 A–Z gözat
               </Link>
             </div>
             <div className="mt-4">
-              <DreamList dreams={related} variant="cards" />
+              <DreamList dreams={related.slice(0, 4)} variant="cards" />
             </div>
           </section>
         </div>
