@@ -7,20 +7,22 @@ export const metadata: Metadata = {
     default: "Oneirova",
     template: "%s · Oneirova",
   },
-  description:
-    "Rüya tabirlerini keşfedin: sade, anlaşılır ve hızlı arama deneyimi.",
+  description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
+  icons: {
+    icon: [{ url: "/favicon.ico" }],
+  },
   openGraph: {
     type: "website",
     locale: "tr_TR",
     url: "https://oneirova.com",
     siteName: "Oneirova",
     title: "Oneirova",
-    description: "Rüya tabirlerini keşfedin: sade, anlaşılır ve hızlı arama deneyimi.",
+    description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Oneirova",
-    description: "Rüya tabirlerini keşfedin: sade, anlaşılır ve hızlı arama deneyimi.",
+    description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
   },
   robots: {
     index: true,

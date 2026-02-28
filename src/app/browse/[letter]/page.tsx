@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/Container";
-import { DreamList } from "@/components/DreamList";
+
 import { SiteShell } from "@/components/SiteShell";
 import { getDreamsByLetter } from "@/lib/dreams";
 
@@ -72,7 +72,47 @@ export default async function BrowseLetterPage({ params }: { params: Promise<Bro
           </div>
 
           <div className="mt-8">
-            <DreamList dreams={dreams} />
+            {dreams.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-surface px-5 py-10 text-center text-sm text-muted">
+                Bu harfle başlayan bir rüya tabiri bulunamadı.
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {dreams.map((d) => {
+                  const rawTitle = String(d.title ?? "").trim();
+                  const isAlready = /^rüyada\s/i.test(rawTitle);
+                  const parts = rawTitle.split(/\s+/).filter(Boolean);
+                  const formatted = isAlready ? rawTitle : parts.length <= 1 ? `Rüyada ${rawTitle} Görmek` : `Rüyada ${rawTitle}`;
+                  const excerpt = String(d.excerpt ?? "").trim();
+
+                  return (
+                    <Link
+                      key={d.slug}
+                      href={`/ruya/${d.slug}`}
+                      className={[
+                        "group rounded-2xl border border-border bg-surface/80 px-5 py-5 shadow-sm backdrop-blur-sm",
+                        "transition-colors hover:border-accent/60 hover:bg-surface2 hover:shadow-md",
+                      ].join(" ")}
+                    >
+                      <div className="text-base font-medium leading-snug text-foreground">{formatted}</div>
+                      <div className="mt-2 text-sm leading-6 text-muted">{excerpt || "Kısa açıklama yakında."}</div>
+                      {d.themes?.length ? (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {d.themes.slice(0, 2).map((t) => (
+                            <span
+                              key={t}
+                              className="rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </Container>

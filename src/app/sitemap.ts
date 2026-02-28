@@ -12,6 +12,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    {
+      url: "https://oneirova.com/ruyalar",
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: "https://oneirova.com/astroloji",
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: "https://oneirova.com/numeroloji",
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: "https://oneirova.com/testler",
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ];
 
   const browseRoutes: MetadataRoute.Sitemap = "abcdefghijklmnopqrstuvwxyz".split("").map((l) => ({

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Container } from "@/components/Container";
 import { DreamList } from "@/components/DreamList";
+import { DreamReadCounter } from "@/components/DreamReadCounter";
 import { ShareMenu } from "@/components/ShareMenu";
 import { SiteShell } from "@/components/SiteShell";
 import { ADMIN_COOKIE_NAME } from "@/lib/admin/auth";
@@ -269,6 +270,10 @@ export default async function DreamPage({
               <p className="mt-4 text-pretty text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
                 {dream.excerpt}
               </p>
+
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <DreamReadCounter slug={dream.slug} />
+              </div>
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
                 <div className="relative aspect-[16/9] w-full">

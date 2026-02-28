@@ -9,14 +9,37 @@ export function SiteFooter() {
       <Container>
         <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="text-sm font-medium tracking-wide text-foreground">Oneirova</div>
+            <div className="flex items-center gap-3">
+              <img
+                src="/brand/oneirova-mark.png"
+                alt="Oneirova"
+                width={28}
+                height={28}
+                loading="lazy"
+                decoding="async"
+                className="h-7 w-7 rounded-xl border border-border bg-surface object-contain"
+              />
+              <div className="text-sm font-medium tracking-wide text-foreground">Oneirova</div>
+            </div>
             <p className="mt-3 text-sm leading-6 text-muted">
-              Rüya tabirlerini sade bir deneyimle keşfedin. Arayın, gözatın, bağlantıları paylaşın.
+              Rüyalar, astroloji, numeroloji ve kişilik testleriyle kendini keşfet. Sade, hızlı, keyifli.
             </p>
           </div>
           <div>
             <div className="text-xs font-medium uppercase tracking-wider text-muted">Keşfet</div>
             <div className="mt-3 grid gap-2 text-sm">
+              <Link href="/ruyalar" className="text-muted transition-colors hover:text-foreground">
+                Rüyalar
+              </Link>
+              <Link href="/astroloji" className="text-muted transition-colors hover:text-foreground">
+                Astroloji
+              </Link>
+              <Link href="/numeroloji" className="text-muted transition-colors hover:text-foreground">
+                Numeroloji
+              </Link>
+              <Link href="/testler" className="text-muted transition-colors hover:text-foreground">
+                Testler
+              </Link>
               <Link href="/search" className="text-muted transition-colors hover:text-foreground">
                 Arama
               </Link>
@@ -74,4 +97,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

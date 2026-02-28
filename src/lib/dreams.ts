@@ -661,8 +661,14 @@ export async function getDreamThemes(): Promise<string[]> {
 }
 
 function indexLetter(value: string): string {
-  const ch = value.trim().slice(0, 1).toLowerCase();
-  if (!ch) return "";
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+
+  const withoutPrefix = raw.replace(/^(rüyada|ruyada|rüyanda|ruyanda)\b[\s:–—-]*/i, "").trim();
+  const m = withoutPrefix.match(/[\p{L}]/u);
+  if (!m || m.index == null) return "";
+
+  const ch = withoutPrefix.slice(m.index, m.index + 1).toLowerCase();
   const map: Record<string, string> = {
     ç: "c",
     ğ: "g",
