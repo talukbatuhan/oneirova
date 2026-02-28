@@ -4,7 +4,9 @@ import { Container } from "@/components/Container";
 import { DreamList } from "@/components/DreamList";
 import { SearchBar } from "@/components/SearchBar";
 import { SiteShell } from "@/components/SiteShell";
-import { getLatestDreams, getTrendingDreams } from "@/lib/dreams";
+import { getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Rüya Tabirleri",
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DreamHubPage() {
-  const trending = await getTrendingDreams(8);
+  const trending = await getWeeklyTrendingDreams(8);
   const latest = await getLatestDreams(6);
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
 
@@ -71,9 +73,9 @@ export default async function DreamHubPage() {
         <div className="mt-14 grid gap-10 lg:grid-cols-2">
           <section id="populer" className="scroll-mt-24">
             <div className="flex items-end justify-between gap-6">
-              <h2 className="text-lg text-foreground">Popüler</h2>
-              <Link href="/search?q=diş" className="text-sm text-muted transition-colors hover:text-foreground">
-                Keşfet
+              <h2 className="text-lg text-foreground">Haftanın en çok okunanları</h2>
+              <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
+                A–Z
               </Link>
             </div>
             <div className="mt-4">

@@ -1,4 +1,5 @@
 import { isSupabaseConfigured } from "./supabase/config";
+import { createSupabaseAdminClient } from "./supabase/admin";
 import { createSupabaseServerClient } from "./supabase/server";
 
 export type DreamSection = {
@@ -650,6 +651,50 @@ export async function getTrendingDreams(limit: number): Promise<DreamEntry[]> {
 
   const bySlug = new Map<string, DreamEntry>((data ?? []).map((r) => [r.slug, toDreamEntry(r as DreamRow)]));
   const picked = curated.map((slug) => bySlug.get(slug)).filter((d): d is DreamEntry => Boolean(d));
+  return picked.slice(0, limit);
+}
+
+export async function getWeeklyTrendingDreams(limit: number): Promise<DreamEntry[]> {
+  if (!isSupabaseConfigured()) return getTrendingDreams(limit);
+
+  const supabase = createSupabaseAdminClient();
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("dream_reads")
+    .select("slug,created_at")
+    .gte("created_at", since)
+    .limit(20000);
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const r of data ?? []) {
+    const slug = String((r as any).slug ?? "");
+    if (!slug) continue;
+    counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+
+  const slugs = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([slug]) => slug);
+
+  if (slugs.length === 0) return getTrendingDreams(limit);
+
+  const { data: dreamsData, error: dreamsError } = await supabase
+    .from("dreams")
+    .select(dreamSelect)
+    .eq("status", "published")
+    .in("slug", slugs);
+
+  if (dreamsError) throw dreamsError;
+
+  const bySlug = new Map<string, DreamEntry>(
+    (dreamsData ?? []).map((r) => [String((r as any).slug ?? ""), toDreamEntry(r as DreamRow)]),
+  );
+
+  const picked = slugs.map((slug) => bySlug.get(slug)).filter((d): d is DreamEntry => Boolean(d));
   return picked.slice(0, limit);
 }
 
