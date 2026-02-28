@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     template: "%s · Oneirova",
   },
   description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
+  verification: {
+    google: "W3Xx9nB9vPXB9lgCKvaHf2k_WxgRoB3PA95I5exM2Lc",
+  },
   icons: {
     icon: [{ url: "/favicon.ico" }],
   },
