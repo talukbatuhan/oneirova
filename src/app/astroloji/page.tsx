@@ -38,6 +38,9 @@ const SIGNS: Array<{
   { key: "balik", label: "Balık", vibe: "Sezer, akar, şefkatle kapsar.", keywords: ["Sezgi", "Hayal", "Şefkat"], questions: ["Hangi duygu mesaj taşıyor?", "Nerede akışa izin verebilirsin?"] },
 ];
 
+import { AstrologyScroll } from "./AstrologyScroll";
+import { Suspense } from "react";
+
 export default async function AstrologyPage({ searchParams }: { searchParams?: Promise<SP> }) {
   const sp = (await searchParams) ?? {};
   const signKey = typeof sp.burc === "string" ? sp.burc : "";
@@ -45,6 +48,9 @@ export default async function AstrologyPage({ searchParams }: { searchParams?: P
 
   return (
     <SiteShell mainClassName="pb-24 pt-10">
+      <Suspense fallback={null}>
+        <AstrologyScroll />
+      </Suspense>
       <Container>
         <div className="mx-auto max-w-[72ch]">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -57,9 +63,8 @@ export default async function AstrologyPage({ searchParams }: { searchParams?: P
             </Link>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm">
-            <div className="text-sm font-medium text-foreground">Burcunu seç</div>
-            <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-6">
+            <div className="grid grid-cols-4 gap-2">
               {SIGNS.map((s) => {
                 const active = selected?.key === s.key;
                 return (
@@ -67,73 +72,51 @@ export default async function AstrologyPage({ searchParams }: { searchParams?: P
                     key={s.key}
                     href={`/astroloji?burc=${encodeURIComponent(s.key)}`}
                     className={[
-                      "rounded-full border px-4 py-2 text-xs transition-colors",
+                      "group flex flex-col items-center justify-center gap-1 p-2 text-center text-sm font-medium uppercase tracking-wider transition-all",
                       active
-                        ? "border-accent/60 bg-surface2 text-foreground"
-                        : "border-border bg-surface text-muted hover:border-accent/60 hover:text-foreground",
+                        ? "text-foreground"
+                        : "text-muted hover:text-foreground",
                     ].join(" ")}
                   >
+                    <img
+                      src={`/astro-icons/${s.key}.png`}
+                      alt=""
+                      className="h-36 w-36 object-contain transition-transform duration-500 group-hover:scale-x-[-1]"
+                      loading="lazy"
+                    />
                     {s.label}
                   </Link>
                 );
               })}
             </div>
-
-            {selected ? (
-              <div className="mt-5 grid gap-4 lg:grid-cols-3">
-                <div className="rounded-2xl border border-border bg-surface p-4">
-                  <div className="text-sm font-medium text-foreground">{selected.label} teması</div>
-                  <div className="mt-2 text-sm leading-6 text-muted">{selected.vibe}</div>
-                </div>
-                <div className="rounded-2xl border border-border bg-surface p-4">
-                  <div className="text-sm font-medium text-foreground">Anahtar kelimeler</div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selected.keywords.map((k) => (
-                      <span key={k} className="rounded-full border border-border bg-surface2 px-3 py-1 text-xs text-muted">
-                        {k}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-surface p-4">
-                  <div className="text-sm font-medium text-foreground">Soru kartı</div>
-                  <ul className="mt-2 space-y-2 text-sm leading-6 text-muted">
-                    {selected.questions.map((q) => (
-                      <li key={q}>{q}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 text-sm text-muted">Seçim yapınca burç kartları burada açılır.</div>
-            )}
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                href="/astroloji/ikizler-burcu"
-                className="inline-flex items-center rounded-full border border-border bg-surface px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
-              >
-                İkizler editoryal içerik
-              </Link>
-            </div>
           </div>
 
-          <section className="mt-10">
-            <h2 className="text-lg text-foreground">Keşif başlıkları</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { t: "Burç temaları", s: "Motivasyonlar, gölge taraf ve pratik ipuçları." },
-                { t: "Uyumluluk", s: "Etiket değil; iletişim dili ve ihtiyaçlar." },
-                { t: "Günün gökyüzü", s: "Tempo · ilişki · iş odağı için yumuşak yönlendirme." },
-              ].map((c) => (
-                <div key={c.t} className="rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm">
-                  <div className="text-sm font-medium text-foreground">{c.t}</div>
-                  <div className="mt-2 text-sm leading-6 text-muted">{c.s}</div>
-                  <div className="mt-3 text-xs text-muted">Durum: Yakında</div>
-                </div>
-              ))}
+          {selected ? (
+            <div id="astro-result" className="mt-10 scroll-mt-24">
+              <div className="flex justify-center gap-8 border-b border-border pb-4 text-center">
+                {["Günlük", "Haftalık", "Aylık"].map((item) => (
+                  <button
+                    key={item}
+                    className={`text-lg font-medium transition-colors ${
+                      item === "Günlük" ? "text-foreground" : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-6 rounded-2xl border border-border bg-surface/80 p-6 text-center shadow-sm backdrop-blur-sm">
+                <h2 className="text-xl font-medium text-foreground">{selected.label} - Günlük Yorum</h2>
+                <p className="mt-4 text-muted">
+                  Bugün yıldızlar sizin için ne söylüyor? {selected.vibe} Enerjinizi doğru yönlendirmek için harika bir gün.
+                </p>
+              </div>
             </div>
-          </section>
+          ) : (
+            <div className="mt-16 text-center text-muted">
+              Yorumları görmek için yukarıdan bir burç seçin.
+            </div>
+          )}
 
 
         </div>
