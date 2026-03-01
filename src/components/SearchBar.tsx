@@ -107,8 +107,8 @@ export function SearchBar({
           goToSearch(query);
         }}
         className={[
-          "relative flex w-full items-center gap-3 rounded-2xl border border-border bg-surface/80 px-4 py-3 shadow-sm backdrop-blur-sm",
-          "focus-within:border-accent focus-within:ring-2 focus-within:ring-ring/30",
+          "relative flex w-full items-center gap-3 border border-border bg-surface/80 px-4 py-3 shadow-sm backdrop-blur-sm",
+          "focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/20",
           variant === "hero" ? "sm:px-5 sm:py-4" : "px-4 py-3",
         ].join(" ")}
       >
@@ -166,7 +166,7 @@ export function SearchBar({
         <button
           type="submit"
           className={[
-            "rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background shadow-sm",
+            "bg-foreground px-6 py-2 text-xs font-medium uppercase tracking-wider text-background shadow-sm",
             "transition-colors hover:bg-foreground/90",
             variant === "compact" ? "hidden sm:block" : "",
           ].join(" ")}
@@ -180,11 +180,11 @@ export function SearchBar({
           role="listbox"
           aria-label="Arama önerileri"
           className={[
-            "absolute z-20 mt-3 w-full overflow-hidden rounded-2xl border border-border",
-            "bg-surface/80 backdrop-blur-xl shadow-[0_24px_80px_rgba(0,0,0,0.35)]",
+            "absolute z-20 mt-1 w-full overflow-hidden border border-border",
+            "bg-surface shadow-xl",
           ].join(" ")}
         >
-          <div className="py-2">
+          <div className="py-0">
             {suggestions.length > 0 ? (
               suggestions.map((s, idx) => {
                 const active = idx === activeIndex;
@@ -197,8 +197,8 @@ export function SearchBar({
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => goToDream(s.slug)}
                     className={[
-                      "flex w-full items-center justify-between gap-4 px-4 py-3 text-left",
-                      active ? "bg-foreground/5" : "bg-transparent",
+                      "flex w-full items-center justify-between gap-4 border-b border-border px-4 py-3 text-left last:border-0",
+                      active ? "bg-surface2" : "bg-transparent",
                       "transition-colors",
                     ].join(" ")}
                   >

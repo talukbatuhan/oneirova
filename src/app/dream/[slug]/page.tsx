@@ -146,7 +146,7 @@ export default async function DreamPage({
     typeof dream.seo?.canonical === "string" && dream.seo.canonical.startsWith("/")
       ? dream.seo.canonical
       : `/ruya/${dream.slug}`;
-  const canonicalUrl = `https://oneirova.com${canonicalPath}`;
+  const canonicalUrl = `https://www.oneirova.com${canonicalPath}`;
 
   const title = (dream.seo?.seoTitle ?? dream.title).trim();
   const description = (dream.seo?.seoDescription ?? dream.excerpt).trim();
@@ -198,7 +198,7 @@ export default async function DreamPage({
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Oneirova", item: "https://oneirova.com/" },
+        { "@type": "ListItem", position: 1, name: "Oneirova", item: "https://www.oneirova.com/" },
         { "@type": "ListItem", position: 2, name: title, item: canonicalUrl },
       ],
     },

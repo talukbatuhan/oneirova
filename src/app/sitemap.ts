@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const BASE_URL = "https://oneirova.com";
+  const BASE_URL = "https://www.oneirova.com";
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -43,12 +43,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/yks`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.6,
     },
   ];
 

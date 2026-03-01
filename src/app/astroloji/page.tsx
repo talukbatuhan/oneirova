@@ -107,6 +107,15 @@ export default async function AstrologyPage({ searchParams }: { searchParams?: P
             ) : (
               <div className="mt-4 text-sm text-muted">Seçim yapınca burç kartları burada açılır.</div>
             )}
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href="/astroloji/ikizler-burcu"
+                className="inline-flex items-center rounded-full border border-border bg-surface px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+              >
+                İkizler editoryal içerik
+              </Link>
+            </div>
           </div>
 
           <section className="mt-10">

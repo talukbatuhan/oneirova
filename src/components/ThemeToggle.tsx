@@ -36,7 +36,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       className={[
-        "inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-2 text-xs text-muted",
+        "inline-flex items-center gap-2 border border-border bg-surface px-4 py-2 text-xs font-medium uppercase tracking-wider text-muted",
         "transition-colors hover:border-accent/60 hover:text-foreground",
       ].join(" ")}
       aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}

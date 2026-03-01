@@ -6,10 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/"],
-        disallow: ["/search"],
+        disallow: ["/search", "/admin"],
       },
     ],
-    sitemap: "https://oneirova.com/sitemap.xml",
+    sitemap: "https://www.oneirova.com/sitemap.xml",
   };
 }
-

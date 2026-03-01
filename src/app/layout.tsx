@@ -1,8 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://oneirova.com"),
+  metadataBase: new URL("https://www.oneirova.com"),
   title: {
     default: "Oneirova",
     template: "%s · Oneirova",
@@ -17,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    url: "https://oneirova.com",
+    url: "https://www.oneirova.com",
     siteName: "Oneirova",
     title: "Oneirova",
     description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",

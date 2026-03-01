@@ -28,7 +28,7 @@ export default async function DreamHubPage() {
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
 
   return (
-    <SiteShell mainClassName="pb-24 pt-10">
+    <SiteShell mainClassName="pb-24 pt-8 sm:pt-10">
       <Container>
         <div className="mx-auto max-w-[72ch]">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -79,7 +79,12 @@ export default async function DreamHubPage() {
               </Link>
             </div>
             <div className="mt-4">
-              <DreamList dreams={trending} />
+              <div className="md:hidden">
+                <DreamList dreams={trending} variant="cards" />
+              </div>
+              <div className="hidden md:block">
+                <DreamList dreams={trending} />
+              </div>
             </div>
           </section>
 
@@ -91,7 +96,12 @@ export default async function DreamHubPage() {
               </Link>
             </div>
             <div className="mt-4">
-              <DreamList dreams={latest} />
+              <div className="md:hidden">
+                <DreamList dreams={latest} variant="cards" />
+              </div>
+              <div className="hidden md:block">
+                <DreamList dreams={latest} />
+              </div>
             </div>
           </section>
         </div>

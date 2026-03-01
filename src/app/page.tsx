@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SearchBar } from "@/components/SearchBar";
 import { SiteShell } from "@/components/SiteShell";
+import { getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
 
 export const metadata: Metadata = {
   title: "Oneirova",
@@ -18,294 +19,367 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export const revalidate = 3600;
+
+type HomeCard = {
+  title: string;
+  excerpt: string;
+  href: string;
+  meta?: string;
+  imageUrl?: string | null;
+};
+
+function ImageCard({
+  item,
+  tone,
+}: {
+  item: HomeCard;
+  tone: "dreams" | "astro" | "numero" | "tests";
+}) {
+  const gradient =
+    tone === "dreams"
+      ? "from-accent/25 via-background to-accent2/15"
+      : tone === "astro"
+        ? "from-accent2/20 via-background to-accent/15"
+        : tone === "numero"
+          ? "from-accent/18 via-background to-surface2"
+          : "from-accent2/18 via-background to-surface2";
+
   return (
-    <SiteShell>
-      <Container>
-        <div className="mx-auto max-w-[72ch]">
-          <h1 className="text-balance text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl">
-            Merakla başla, kendini keşfet.
-          </h1>
-          <p className="mt-4 text-pretty text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
-            Oneirova; rüyalar, astroloji, numeroloji ve kişilik testlerini tek bir akışta buluşturan modern bir keşif alanı.
-          </p>
-
-          <div className="mt-8">
-            <SearchBar variant="hero" autoFocus />
+    <Link
+      href={item.href}
+      className={[
+        "group relative overflow-hidden border border-border bg-surface/80 shadow-sm backdrop-blur-sm",
+        "transition-colors hover:border-accent/60 hover:bg-surface2 hover:shadow-md",
+      ].join(" ")}
+    >
+      {item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover opacity-70 transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : null}
+      <div className={["absolute inset-0 bg-gradient-to-br", gradient, item.imageUrl ? "opacity-75" : ""].join(" ")} />
+      <div className="relative p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="font-serif text-lg font-medium leading-snug text-foreground">{item.title}</div>
+            <div className="mt-2 text-sm leading-6 text-muted">{item.excerpt}</div>
           </div>
-
-          <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted">
-            {["diş", "kovalanmak", "su", "sınav", "yılan", "ev"].map((q) => (
-              <Link
-                key={q}
-                href={`/search?q=${encodeURIComponent(q)}`}
-                className="rounded-full border border-border bg-surface px-4 py-2 transition-colors hover:border-accent/60 hover:bg-surface2"
-              >
-                {q}
-              </Link>
-            ))}
-          </div>
+          {item.meta ? (
+            <div className="shrink-0 border border-border bg-background/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted">
+              {item.meta}
+            </div>
+          ) : null}
         </div>
+      </div>
+    </Link>
+  );
+}
 
-        <section className="mt-10">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-lg text-foreground">Keşif alanları</h2>
-              <p className="mt-2 text-sm text-muted">
-                Bir yerden başla; diğerleri seni çağıracak.
+function TitleOnlyList({ items }: { items: { title: string; href: string }[] }) {
+  if (items.length === 0) {
+    return (
+      <div className="border border-border bg-surface px-5 py-10 text-center text-sm text-muted">
+        Henüz sonuç yok.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden border border-border bg-surface/80 shadow-sm backdrop-blur-sm">
+      <div className="divide-y divide-border">
+        {items.map((x) => (
+          <Link
+            key={x.href}
+            href={x.href}
+            className="group block px-5 py-3 text-sm font-medium leading-snug text-foreground transition-colors hover:bg-surface2"
+          >
+            <span className="bg-gradient-to-r from-foreground to-foreground bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-all group-hover:bg-[length:100%_1px]">
+              {x.title}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SquareCardGrid({ items }: { items: { title: string; href: string; imageUrl?: string | null }[] }) {
+  if (items.length === 0) {
+    return <div className="border border-border bg-surface px-5 py-10 text-center text-sm text-muted">Henüz sonuç yok.</div>;
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-3">
+      {items.map((x) => (
+        <Link
+          key={x.href}
+          href={x.href}
+          className={[
+            "group relative block overflow-hidden bg-surface",
+            "transition-colors hover:bg-surface2",
+          ].join(" ")}
+        >
+          <div className="relative aspect-square">
+            {x.imageUrl ? (
+              <img
+                src={x.imageUrl}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/80" />
+            <div className="absolute inset-x-0 bottom-0 p-4">
+              <div className="line-clamp-2 text-sm font-medium leading-snug text-white/90 group-hover:text-white">
+                {x.title}
+              </div>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export default async function Home() {
+  const dreamPopular = await getWeeklyTrendingDreams(6);
+  const dreamNew = await getLatestDreams(6);
+
+  const astroPopular: HomeCard[] = [
+    {
+      title: "Burç temaları",
+      excerpt: "12 burcun motivasyonları ve gölge tarafı üzerine kısa okuma.",
+      href: "/astroloji",
+      meta: "Popüler",
+    },
+    {
+      title: "Uyumluluk",
+      excerpt: "İlişkilerde iletişim dili ve ihtiyaçlar: pratik yaklaşım.",
+      href: "/astroloji",
+      meta: "Popüler",
+    },
+    {
+      title: "Günün gökyüzü",
+      excerpt: "Bugün tempo, ilişki ve iş odağı için yumuşak yönlendirme.",
+      href: "/astroloji",
+      meta: "Popüler",
+    },
+  ];
+
+  const astroNew: HomeCard[] = [
+    {
+      title: "Haftalık odak",
+      excerpt: "Bir haftalık niyet ve aksiyon cümlesiyle sade plan.",
+      href: "/astroloji",
+      meta: "Yeni",
+    },
+    {
+      title: "Transit notları",
+      excerpt: "Kısa: tetiklenen tema, fırsat, dikkat noktası.",
+      href: "/astroloji",
+      meta: "Yeni",
+    },
+    {
+      title: "Ay döngüsü",
+      excerpt: "Başlat · büyüt · bırak ritmiyle içgörü kartları.",
+      href: "/astroloji",
+      meta: "Yeni",
+    },
+  ];
+
+  const numeroPopular: HomeCard[] = [
+    {
+      title: "Hayat yolu sayısı",
+      excerpt: "Doğum tarihinden temel eğilimi çıkar: kısa özet.",
+      href: "/numeroloji",
+      meta: "Popüler",
+    },
+    {
+      title: "Gün sayısı",
+      excerpt: "Bugünün enerjisi için hızlı bir odak cümlesi.",
+      href: "/numeroloji",
+      meta: "Popüler",
+    },
+    {
+      title: "İsim analizi",
+      excerpt: "İsim-soyisim üzerinden tema ve güçlü yönler.",
+      href: "/numeroloji",
+      meta: "Popüler",
+    },
+  ];
+
+  const numeroNew: HomeCard[] = [
+    {
+      title: "Haftalık sayı teması",
+      excerpt: "Tek bir sayıyla haftanın ana odağını netleştir.",
+      href: "/numeroloji",
+      meta: "Yeni",
+    },
+    {
+      title: "Aylık yön",
+      excerpt: "Ayın ritmi: niyet, eylem ve bırakma üçlüsü.",
+      href: "/numeroloji",
+      meta: "Yeni",
+    },
+    {
+      title: "Tekrar eden sayılar",
+      excerpt: "11:11, 22:22 gibi desenleri anlamlandırma.",
+      href: "/numeroloji",
+      meta: "Yeni",
+    },
+  ];
+
+  const testsPopular: HomeCard[] = [
+    { title: "Big Five (mini)", excerpt: "5 boyutta hızlı profil", href: "/testler", meta: "Popüler" },
+    { title: "Enneagram (mini)", excerpt: "Motivasyon odağı", href: "/testler", meta: "Popüler" },
+    { title: "Aşk dili (mini)", excerpt: "İletişim tercihleri", href: "/testler", meta: "Popüler" },
+  ];
+
+  const testsNew: HomeCard[] = [
+    { title: "Stres tepkisi", excerpt: "Zorlanınca hangi moda giriyorsun?", href: "/testler", meta: "Yeni" },
+    { title: "Odak stili", excerpt: "Kısa dikkat mi derin çalışma mı?", href: "/testler", meta: "Yeni" },
+    { title: "Sosyal enerji", excerpt: "Şarj olma şeklin: kalabalık mı yalnızlık mı?", href: "/testler", meta: "Yeni" },
+  ];
+
+  return (
+    <SiteShell mainClassName="pb-24 pt-10">
+      <Container>
+        <section>
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-7">
+              <h1 className="text-balance font-serif text-5xl leading-[0.95] tracking-tight text-foreground sm:text-7xl">
+                Bugünün en çok okunanları ve yenileri.
+              </h1>
+              <p className="mt-6 text-pretty text-lg leading-relaxed text-muted sm:text-xl">
+                Rüyalar, astroloji, numeroloji ve testler için güncel bir akış: popüler başlıkları yakala, yeni içeriklere
+                hızlıca geç.
               </p>
-            </div>
-            <div className="text-xs text-muted">Önizleme + tam sayfa deneyimi.</div>
-          </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Link
-              href="/ruyalar"
-              className={[
-                "group rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-sm font-medium text-foreground">Rüyalar</div>
-                  <div className="mt-1 text-sm leading-6 text-muted">Sembol, duygu ve senaryo araması.</div>
-                </div>
-                <span className="rounded-full border border-accent/40 bg-surface2 px-3 py-1 text-xs text-foreground">
-                  Şimdi
-                </span>
+              <div className="mt-10">
+                <SearchBar variant="hero" />
               </div>
-            </Link>
-
-            <Link
-              href="/astroloji"
-              className={[
-                "group rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-sm font-medium text-foreground">Astroloji</div>
-                  <div className="mt-1 text-sm leading-6 text-muted">Burçlar, temalar, günlük ipuçları.</div>
-                </div>
-                <span className="rounded-full border border-accent/40 bg-surface2 px-3 py-1 text-xs text-foreground">
-                  Keşfet
-                </span>
-              </div>
-            </Link>
-
-            <Link
-              href="/numeroloji"
-              className={[
-                "group rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-sm font-medium text-foreground">Numeroloji</div>
-                  <div className="mt-1 text-sm leading-6 text-muted">Sayıların diliyle küçük yön bulma.</div>
-                </div>
-                <span className="rounded-full border border-accent/40 bg-surface2 px-3 py-1 text-xs text-foreground">
-                  Keşfet
-                </span>
-              </div>
-            </Link>
-
-            <Link
-              href="/testler"
-              className={[
-                "group rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-sm font-medium text-foreground">Kişilik Testleri</div>
-                  <div className="mt-1 text-sm leading-6 text-muted">Kısa, eğlenceli ve paylaşılabilir.</div>
-                </div>
-                <span className="rounded-full border border-accent/40 bg-surface2 px-3 py-1 text-xs text-foreground">
-                  Keşfet
-                </span>
-              </div>
-            </Link>
-          </div>
-        </section>
-
-        <section id="astroloji" className="mt-14 scroll-mt-24">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <h2 className="text-lg text-foreground">Astroloji</h2>
-              <p className="mt-2 text-sm text-muted">Önizleme: burçlar ve temalarla hızlı bir giriş.</p>
             </div>
-            <Link
-              href="/astroloji"
-              className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
-            >
-              Astrolojiye git
-            </Link>
-          </div>
 
-          <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            {[
-              {
-                t: "Burç temaları",
-                s: "12 burcun motivasyonları ve gölge tarafı.",
-                b: "Kısa özetler, örnek senaryolar, soru kartları.",
-              },
-              {
-                t: "Günün gökyüzü",
-                s: "Bugün neyi kolaylaştırır, neyi zorlar?",
-                b: "Yumuşak yönlendirme: tempo, ilişki, iş odağı.",
-              },
-              {
-                t: "Uyumluluk",
-                s: "İlişki dinamikleri için pratik okuma.",
-                b: "Sadece etiket değil: iletişim dili ve ihtiyaçlar.",
-              },
-            ].map((c) => (
-              <details
-                key={c.t}
-                className="rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm open:border-accent/60"
-              >
-                <summary className="cursor-pointer list-none">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-sm font-medium text-foreground">{c.t}</div>
-                      <div className="mt-1 text-sm leading-6 text-muted">{c.s}</div>
-                    </div>
-                    <div className="text-xs text-muted">Aç</div>
-                  </div>
-                </summary>
-                <div className="mt-4 text-sm leading-6 text-muted">{c.b}</div>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        <section id="numeroloji" className="mt-14 scroll-mt-24">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <h2 className="text-lg text-foreground">Numeroloji</h2>
-              <p className="mt-2 text-sm text-muted">Önizleme: 1 dakikada temel sayını bul.</p>
-            </div>
-            <Link
-              href="/numeroloji"
-              className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
-            >
-              Numerolojiye git
-            </Link>
-          </div>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm">
-              <div className="text-sm font-medium text-foreground">Hayat yolu</div>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                Doğum tarihinin tüm rakamlarını topla, tek haneye indir.
-              </p>
-              <p className="mt-3 text-xs text-muted">
-                Örnek: <span className="text-foreground">28.02.2026</span> → 2+8+0+2+2+0+2+6 = 22 → 2+2 = 4
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm">
-              <div className="text-sm font-medium text-foreground">Gün sayısı</div>
-              <p className="mt-2 text-sm leading-6 text-muted">Bugünün enerjisini kısa bir odak cümlesiyle yakala.</p>
-              <p className="mt-3 text-xs text-muted">Rutin: niyet · eylem · bırakma.</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm">
-              <div className="text-sm font-medium text-foreground">İsim analizi</div>
-              <p className="mt-2 text-sm leading-6 text-muted">İsim ve soyadından karakter temalarını çıkar.</p>
-              <p className="mt-3 text-xs text-muted">Özet + güçlü yönler + dikkat noktaları.</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="testler" className="mt-14 scroll-mt-24">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <h2 className="text-lg text-foreground">Kişilik Testleri</h2>
-              <p className="mt-2 text-sm text-muted">Önizleme: kısa ve paylaşılabilir test akışları.</p>
-            </div>
-            <Link
-              href="/testler"
-              className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
-            >
-              Testlere git
-            </Link>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { t: "Big Five (mini)", s: "5 boyutta hızlı profil" },
-              { t: "Enneagram (mini)", s: "motivasyon odağı" },
-              { t: "Aşk dili (mini)", s: "iletişim tercihleri" },
-            ].map((c) => (
-              <div
-                key={c.t}
-                className="rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm"
-              >
-                <div className="flex items-start justify-between gap-4">
+            <div className="lg:col-span-5">
+              <div className="border border-border bg-surface/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="flex items-end justify-between gap-6 border-b border-border pb-4">
                   <div>
-                    <div className="text-sm font-medium text-foreground">{c.t}</div>
-                    <div className="mt-1 text-sm leading-6 text-muted">{c.s}</div>
+                    <div className="font-serif text-lg text-foreground">Rüyalar</div>
+                    <div className="mt-0.5 text-xs font-medium uppercase tracking-wider text-muted">Popüler · Yeni</div>
                   </div>
-                  <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted">Yakında</span>
+                  <Link href="/ruyalar" className="text-xs font-medium uppercase tracking-wider text-muted transition-colors hover:text-foreground">
+                    Tümü
+                  </Link>
                 </div>
-                <div className="mt-3 text-xs text-muted">Süre: 2–4 dk · Sonuç: kart + paylaşım</div>
+                <div className="mt-6">
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">Popüler</div>
+                      <TitleOnlyList items={dreamPopular.slice(0, 4).map((d) => ({ title: d.title, href: `/ruya/${d.slug}` }))} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">Yeni</div>
+                      <TitleOnlyList items={dreamNew.slice(0, 4).map((d) => ({ title: d.title, href: `/ruya/${d.slug}` }))} />
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </section>
 
-        <section className="mt-14">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <h2 className="text-lg text-foreground">Rüya Tabirleri</h2>
-              <p className="mt-2 text-sm text-muted">A–Z dizin, popüler yorumlar ve en yeni içerikler.</p>
+        <section className="mt-20">
+          <div className="grid gap-12 lg:grid-cols-2">
+            <div className="border border-border bg-surface/70 p-0 shadow-sm backdrop-blur-sm">
+              <div className="flex items-end justify-between gap-6 border-b border-border p-6">
+                <div>
+                  <h2 className="font-serif text-2xl text-foreground">Rüya Tabirleri</h2>
+                  <p className="mt-1 text-sm text-muted">Haftanın en çok okunanları</p>
+                </div>
+                <Link href="/ruyalar" className="text-xs font-medium uppercase tracking-wider text-muted transition-colors hover:text-foreground">
+                  Tümü
+                </Link>
+              </div>
+              <div className="">
+                <SquareCardGrid
+                  items={dreamPopular
+                    .slice(0, 6)
+                    .map((d) => ({ title: d.title, href: `/ruya/${d.slug}`, imageUrl: d.ogImageUrl || d.coverImageUrl }))}
+                />
+              </div>
             </div>
-            <Link
-              href="/ruyalar"
-              className={[
-                "inline-flex items-center rounded-full border border-border bg-surface px-4 py-2 text-sm text-muted",
-                "transition-colors hover:border-accent/60 hover:text-foreground",
-              ].join(" ")}
-            >
-              Rüya sayfasına git
-            </Link>
-          </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
-              href="/ruyalar#az"
-              className={[
-                "rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="text-sm font-medium text-foreground">A–Z gözat</div>
-              <div className="mt-1 text-sm leading-6 text-muted">Tüm rüya tabirlerini harflere göre keşfet.</div>
-            </Link>
-            <Link
-              href="/ruyalar#populer"
-              className={[
-                "rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="text-sm font-medium text-foreground">Popüler</div>
-              <div className="mt-1 text-sm leading-6 text-muted">En çok okunan rüya yorumları.</div>
-            </Link>
-            <Link
-              href="/ruyalar#en-yeni"
-              className={[
-                "rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm",
-                "transition-colors hover:border-accent/60 hover:bg-surface2",
-              ].join(" ")}
-            >
-              <div className="text-sm font-medium text-foreground">En yeni</div>
-              <div className="mt-1 text-sm leading-6 text-muted">Yeni eklenen tabirleri hızlıca gör.</div>
-            </Link>
+            <div className="border border-border bg-surface/70 p-6 shadow-sm backdrop-blur-sm">
+              <div className="flex items-end justify-between gap-6 border-b border-border pb-4">
+                <div>
+                  <h2 className="font-serif text-2xl text-foreground">Astroloji</h2>
+                  <p className="mt-1 text-sm text-muted">Öne çıkan temalar ve yeni akış.</p>
+                </div>
+                <Link href="/astroloji" className="text-xs font-medium uppercase tracking-wider text-muted transition-colors hover:text-foreground">
+                  Tümü
+                </Link>
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {astroPopular.map((x) => (
+                  <ImageCard key={`ap-${x.title}`} tone="astro" item={x} />
+                ))}
+                {astroNew.map((x) => (
+                  <ImageCard key={`an-${x.title}`} tone="astro" item={x} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-20">
+          <div className="grid gap-12 lg:grid-cols-2">
+            <div className="border border-border bg-surface/70 p-6 shadow-sm backdrop-blur-sm">
+              <div className="flex items-end justify-between gap-6 border-b border-border pb-4">
+                <div>
+                  <h2 className="font-serif text-2xl text-foreground">Numeroloji</h2>
+                  <p className="mt-1 text-sm text-muted">Sayılarla hızlı yön bulma.</p>
+                </div>
+                <Link href="/numeroloji" className="text-xs font-medium uppercase tracking-wider text-muted transition-colors hover:text-foreground">
+                  Tümü
+                </Link>
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {numeroPopular.map((x) => (
+                  <ImageCard key={`np-${x.title}`} tone="numero" item={x} />
+                ))}
+                {numeroNew.map((x) => (
+                  <ImageCard key={`nn-${x.title}`} tone="numero" item={x} />
+                ))}
+              </div>
+            </div>
+
+            <div className="border border-border bg-surface/70 p-6 shadow-sm backdrop-blur-sm">
+              <div className="flex items-end justify-between gap-6 border-b border-border pb-4">
+                <div>
+                  <h2 className="font-serif text-2xl text-foreground">Testler</h2>
+                  <p className="mt-1 text-sm text-muted">Kısa, eğlenceli ve paylaşılabilir.</p>
+                </div>
+                <Link href="/testler" className="text-xs font-medium uppercase tracking-wider text-muted transition-colors hover:text-foreground">
+                  Tümü
+                </Link>
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {testsPopular.map((x) => (
+                  <ImageCard key={`tp-${x.title}`} tone="tests" item={x} />
+                ))}
+                {testsNew.map((x) => (
+                  <ImageCard key={`tn-${x.title}`} tone="tests" item={x} />
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       </Container>
