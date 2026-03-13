@@ -2,17 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SiteShell } from "@/components/SiteShell";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Numeroloji",
-  description: "Hayat yolu sayını bul, kısa yorum kartlarıyla kendini keşfet.",
+  title: "Numeroloji - Hayat Yolu Sayisi Hesapla",
+  description: "Dogum tarihinden hayat yolu sayini hesapla. Numeroloji ile kendini kesfet, sayilarin anlamini ogren.",
   alternates: { canonical: "/numeroloji" },
   openGraph: {
     type: "website",
     url: "/numeroloji",
-    title: "Numeroloji",
-    description: "Hayat yolu sayını bul, kısa yorum kartlarıyla kendini keşfet.",
+    title: "Numeroloji - Hayat Yolu Sayisi Hesapla",
+    description: "Dogum tarihinden hayat yolu sayini hesapla. Numeroloji ile kendini kesfet, sayilarin anlamini ogren.",
   },
+  keywords: ["numeroloji", "hayat yolu sayisi", "numeroloji hesaplama", "sayi anlami", "dogum tarihi numeroloji"],
 };
 
 type SP = { [key: string]: string | string[] | undefined };
@@ -42,20 +44,20 @@ function lifePathFromDob(dob: string) {
 
 function labelForLifePath(n: number) {
   const map: Record<number, { title: string; vibe: string }> = {
-    1: { title: "1 · Öncü", vibe: "Başlatma, bağımsızlık, liderlik." },
-    2: { title: "2 · Uyum", vibe: "İş birliği, hassasiyet, denge." },
-    3: { title: "3 · İfade", vibe: "Yaratıcılık, iletişim, neşe." },
-    4: { title: "4 · Yapı", vibe: "Disiplin, emek, güvenli temel." },
-    5: { title: "5 · Değişim", vibe: "Özgürlük, hareket, deneyim." },
-    6: { title: "6 · Sorumluluk", vibe: "Bakım, aile, estetik ve düzen." },
-    7: { title: "7 · Derinlik", vibe: "Analiz, sezgi, içe dönüş." },
-    8: { title: "8 · Güç", vibe: "Hedef, yönetim, sonuç alma." },
-    9: { title: "9 · Şefkat", vibe: "Tamamlama, hizmet, bütünlük." },
-    11: { title: "11 · Usta Sezgi", vibe: "İlham, vizyon, hassas algı." },
-    22: { title: "22 · Usta Kurucu", vibe: "Büyük yapı, somutlaştırma, etki." },
-    33: { title: "33 · Usta Şefkat", vibe: "Öğreticilik, şifa, kolektif hizmet." },
+    1: { title: "1 - Oncu", vibe: "Baslatma, bagimsizlik, liderlik." },
+    2: { title: "2 - Uyum", vibe: "Is birligi, hassasiyet, denge." },
+    3: { title: "3 - Ifade", vibe: "Yaraticilik, iletisim, nese." },
+    4: { title: "4 - Yapi", vibe: "Disiplin, emek, guvenli temel." },
+    5: { title: "5 - Degisim", vibe: "Ozgurluk, hareket, deneyim." },
+    6: { title: "6 - Sorumluluk", vibe: "Bakim, aile, estetik ve duzen." },
+    7: { title: "7 - Derinlik", vibe: "Analiz, sezgi, ice donus." },
+    8: { title: "8 - Guc", vibe: "Hedef, yonetim, sonuc alma." },
+    9: { title: "9 - Sefkat", vibe: "Tamamlama, hizmet, butunluk." },
+    11: { title: "11 - Usta Sezgi", vibe: "Ilham, vizyon, hassas algi." },
+    22: { title: "22 - Usta Kurucu", vibe: "Buyuk yapi, somutlastirma, etki." },
+    33: { title: "33 - Usta Sefkat", vibe: "Ogreticilik, sifa, kolektif hizmet." },
   };
-  return map[n] ?? { title: `${n}`, vibe: "Kısa yorum yakında." };
+  return map[n] ?? { title: `${n}`, vibe: "Kisa yorum yakinda." };
 }
 
 export default async function NumerologyPage({ searchParams }: { searchParams?: Promise<SP> }) {
@@ -70,20 +72,25 @@ export default async function NumerologyPage({ searchParams }: { searchParams?: 
   const dayNumber = reduceNumber(sumDigits(`${yyyy}${mm}${dd}`));
 
   return (
-    <SiteShell mainClassName="pb-24 pt-10">
+    <SiteShell mainClassName="pb-24 pt-8 sm:pt-12">
       <Container>
-        <div className="mx-auto max-w-[72ch]">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl text-foreground">Numeroloji</h1>
-              <p className="mt-2 text-sm text-muted">
-                Doğum tarihini gir, hayat yolu sayını gör. Tam analizler yakında; şimdilik hızlı kartlar.
-              </p>
-            </div>
-            <Link href="/" className="text-sm text-muted transition-colors hover:text-foreground">
-              Ana sayfa
-            </Link>
-          </div>
+        <div className="mx-auto max-w-3xl">
+          <Breadcrumbs
+            items={[
+              { label: "Ana Sayfa", href: "/" },
+              { label: "Numeroloji" },
+            ]}
+          />
+
+          {/* Header */}
+          <header className="text-center">
+            <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
+              Numeroloji
+            </h1>
+            <p className="mx-auto mt-4 max-w-lg text-base text-muted">
+              Dogum tarihini gir, hayat yolu sayini gor. Sayilarin dilini coz, kendini kesfet.
+            </p>
+          </header>
 
           <div className="mt-6 rounded-2xl border border-border bg-surface/80 p-5 shadow-sm backdrop-blur-sm">
             <div className="text-sm font-medium text-foreground">Hayat yolu hesapla</div>

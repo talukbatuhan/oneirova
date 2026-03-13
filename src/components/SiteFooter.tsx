@@ -1,95 +1,127 @@
 import Link from "next/link";
 import { Container } from "./Container";
 
+const FOOTER_LINKS = {
+  explore: [
+    { href: "/ruyalar", label: "Ruyalar" },
+    { href: "/astroloji", label: "Astroloji" },
+    { href: "/numeroloji", label: "Numeroloji" },
+    { href: "/testler", label: "Testler" },
+    { href: "/search", label: "Arama" },
+    { href: "/browse/a", label: "A-Z" },
+  ],
+  popular: [
+    { href: "/search?q=dis", label: "Dis ruyasi" },
+    { href: "/search?q=yilan", label: "Yilan ruyasi" },
+    { href: "/search?q=su", label: "Su ruyasi" },
+    { href: "/search?q=ucmak", label: "Ucmak" },
+  ],
+};
+
 export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border bg-background/70">
+    <footer className="border-t border-border bg-surface/50" role="contentinfo">
       <Container>
-        <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <img
-                src="/brand/oneirova-mark.png"
-                alt="Oneirova"
-                width={28}
-                height={28}
-                loading="lazy"
-                decoding="async"
-                className="h-7 w-7 rounded-xl border border-border bg-surface object-contain"
-              />
-              <div className="text-sm font-medium tracking-wide text-foreground">Oneirova</div>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              Rüyalar, astroloji, numeroloji ve kişilik testleriyle kendini keşfet. Sade, hızlı, keyifli.
+        <div className="grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Brand */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <Link href="/" className="group inline-flex items-center gap-3">
+              <div className="h-10 w-10 overflow-hidden rounded-xl">
+                <img
+                  src="/brand/oneirova-mark.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                />
+              </div>
+              <span className="font-serif text-lg font-semibold text-foreground">Oneirova</span>
+            </Link>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
+              Ruyalar, astroloji, numeroloji ve kisilik testleriyle kendini kesfet. Sade, hizli, keyifli.
             </p>
           </div>
+
+          {/* Explore */}
           <div>
-            <div className="text-xs font-medium uppercase tracking-wider text-muted">Keşfet</div>
-            <div className="mt-3 grid gap-2 text-sm">
-              <Link href="/ruyalar" className="text-muted transition-colors hover:text-foreground">
-                Rüyalar
-              </Link>
-              <Link href="/astroloji" className="text-muted transition-colors hover:text-foreground">
-                Astroloji
-              </Link>
-              <Link href="/numeroloji" className="text-muted transition-colors hover:text-foreground">
-                Numeroloji
-              </Link>
-              <Link href="/testler" className="text-muted transition-colors hover:text-foreground">
-                Testler
-              </Link>
-              <Link href="/search" className="text-muted transition-colors hover:text-foreground">
-                Arama
-              </Link>
-              <Link href="/browse/a" className="text-muted transition-colors hover:text-foreground">
-                A–Z
-              </Link>
-            </div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">Kesfet</h3>
+            <nav className="mt-4" aria-label="Kesfet linkleri">
+              <ul className="space-y-3">
+                {FOOTER_LINKS.explore.map((link) => (
+                  <li key={link.href}>
+                    <Link 
+                      href={link.href} 
+                      className="text-sm text-muted transition-colors hover:text-accent"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
+
+          {/* Popular */}
           <div>
-            <div className="text-xs font-medium uppercase tracking-wider text-muted">Popüler</div>
-            <div className="mt-3 grid gap-2 text-sm">
-              <Link href="/search?q=diş" className="text-muted transition-colors hover:text-foreground">
-                Diş
-              </Link>
-              <Link href="/search?q=yılan" className="text-muted transition-colors hover:text-foreground">
-                Yılan
-              </Link>
-              <Link href="/search?q=kovalanmak" className="text-muted transition-colors hover:text-foreground">
-                Kovalanmak
-              </Link>
-            </div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">Populer</h3>
+            <nav className="mt-4" aria-label="Populer aramalar">
+              <ul className="space-y-3">
+                {FOOTER_LINKS.popular.map((link) => (
+                  <li key={link.href}>
+                    <Link 
+                      href={link.href} 
+                      className="text-sm text-muted transition-colors hover:text-accent"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
+
+          {/* Contact */}
           <div>
-            <div className="text-xs font-medium uppercase tracking-wider text-muted">İletişim</div>
-            <div className="mt-3 grid gap-2 text-sm">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">Iletisim</h3>
+            <div className="mt-4 space-y-3">
               <a
                 href="mailto:hello@oneirova.com"
-                className="text-muted transition-colors hover:text-foreground"
+                className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent"
               >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
                 hello@oneirova.com
               </a>
               <a
-                href="https://x.com"
+                href="https://x.com/oneirova"
                 target="_blank"
-                rel="noreferrer"
-                className="text-muted transition-colors hover:text-foreground"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent"
               >
-                X
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                @oneirova
               </a>
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-6 text-xs text-muted">
-          <div>© {year} Oneirova</div>
-          <div className="flex items-center gap-3">
+
+        {/* Bottom bar */}
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-border py-6 text-xs text-muted sm:flex-row">
+          <p>&copy; {year} Oneirova. Tum haklari saklidir.</p>
+          <div className="flex items-center gap-4">
             <Link href="/robots.txt" className="transition-colors hover:text-foreground">
-              robots
+              robots.txt
             </Link>
+            <span className="text-border">|</span>
             <Link href="/sitemap.xml" className="transition-colors hover:text-foreground">
-              sitemap
+              sitemap.xml
             </Link>
           </div>
         </div>

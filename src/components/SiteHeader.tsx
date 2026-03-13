@@ -2,16 +2,42 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Container } from "./Container";
 import { ThemeToggle } from "./ThemeToggle";
+
+const NAV_ITEMS = [
+  { href: "/ruyalar", label: "Ruyalar", matchPaths: ["/ruyalar", "/ruya/"] },
+  { href: "/astroloji", label: "Astroloji", matchPaths: ["/astroloji"] },
+  { href: "/numeroloji", label: "Numeroloji", matchPaths: ["/numeroloji"] },
+  { href: "/testler", label: "Testler", matchPaths: ["/testler"] },
+] as const;
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [readProgress, setReadProgress] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const isReading = pathname.startsWith("/ruya/");
 
+  const isActive = useCallback((matchPaths: readonly string[]) => {
+    return matchPaths.some((path) => 
+      path.endsWith("/") ? pathname.startsWith(path) : pathname === path || pathname.startsWith(path + "/")
+    );
+  }, [pathname]);
+
+  // Track scroll for header shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Reading progress indicator
   useEffect(() => {
     if (!isReading) {
       setReadProgress(0);
@@ -26,8 +52,7 @@ export function SiteHeader() {
       const scrollTop = window.scrollY || doc.scrollTop || 0;
       const scrollHeight = doc.scrollHeight - window.innerHeight;
       const p = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-      const clamped = Math.max(0, Math.min(100, p));
-      setReadProgress(clamped);
+      setReadProgress(Math.max(0, Math.min(100, p)));
     };
 
     const onScroll = () => {
@@ -46,94 +71,189 @@ export function SiteHeader() {
     };
   }, [isReading]);
 
-  const isDreams = pathname === "/ruyalar" || pathname.startsWith("/ruya/");
-  const isAstroloji = pathname.startsWith("/astroloji");
-  const isNumeroloji = pathname.startsWith("/numeroloji");
-  const isTestler = pathname.startsWith("/testler");
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
-  const pill = (active: boolean) =>
-    [
-      "px-4 py-2 text-sm leading-none transition-colors border border-transparent hover:border-border hover:bg-surface2",
-      active ? "bg-surface2 text-foreground border-border" : "text-muted hover:text-foreground",
-    ].join(" ");
-
-  const menuItem = (active: boolean) =>
-    [
-      "px-4 py-3 text-sm transition-colors hover:bg-surface2 hover:text-foreground border-b border-border last:border-0",
-      active ? "bg-surface2 text-foreground" : "text-muted",
-    ].join(" ");
-
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+    <header 
+      className={`sticky top-0 z-40 border-b bg-background/95 backdrop-blur-md transition-all duration-200 ${
+        scrolled ? "border-border shadow-sm" : "border-transparent"
+      }`}
+    >
       <Container>
-        <div className="flex flex-nowrap items-center justify-between gap-4 py-0">
-          <div className="min-w-0">
-            <Link href="/" className="group inline-flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center justify-between gap-4 py-3">
+          {/* Logo */}
+          <Link 
+            href="/" 
+            className="group flex items-center gap-3"
+            aria-label="Oneirova Ana Sayfa"
+          >
+            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl sm:h-14 sm:w-14">
               <img
                 src="/brand/oneirova-mark.png"
-                alt="Oneirova"
-                width={64}
-                height={64}
+                alt=""
+                width={56}
+                height={56}
                 loading="eager"
                 decoding="async"
-                className="block h-18 w-18 shrink-0 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-[75px] sm:w-[90px]"
+                className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
               />
-              <span className="leading-tight">
-                <span className="block font-serif text-xl font-medium tracking-tight text-foreground sm:text-2xl">Oneirova</span>
-                <span className="hidden text-xs font-medium uppercase tracking-widest text-muted sm:block">Rüyalar · Astroloji · Numeroloji</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-serif text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                Oneirova
               </span>
-            </Link>
-          </div>
+              <span className="hidden text-[10px] font-medium uppercase tracking-widest text-muted sm:block">
+                Ruyalar ve Astroloji
+              </span>
+            </div>
+          </Link>
 
-          <nav className="flex shrink-0 items-center gap-2 text-sm text-muted">
-            <details className="relative sm:hidden">
-              <summary className="inline-flex cursor-pointer list-none items-center border border-border bg-surface px-4 py-2 text-xs font-medium uppercase tracking-wider text-muted transition-colors hover:border-accent/60 hover:text-foreground">
-                Menü
-              </summary>
-              <div className="absolute right-0 mt-2 w-56 overflow-hidden border border-border bg-surface shadow-xl">
-                <div className="flex flex-col text-sm">
-                  <Link href="/ruyalar" className={menuItem(isDreams)}>
-                    Rüya Tabirleri
-                  </Link>
-                  <Link href="/astroloji" className={menuItem(isAstroloji)}>
-                    Astroloji
-                  </Link>
-                  <Link href="/numeroloji" className={menuItem(isNumeroloji)}>
-                    Numeroloji
-                  </Link>
-                  <Link href="/testler" className={menuItem(isTestler)}>
-                    Testler
-                  </Link>
-                </div>
-              </div>
-            </details>
-
-            <Link href="/ruyalar" className={["hidden sm:inline-flex", pill(isDreams)].join(" ")}>
-              Rüyalar
-            </Link>
-            <Link href="/astroloji" className={["hidden md:inline-flex", pill(isAstroloji)].join(" ")}>
-              Astroloji
-            </Link>
-            <Link href="/numeroloji" className={["hidden md:inline-flex", pill(isNumeroloji)].join(" ")}>
-              Numeroloji
-            </Link>
-            <Link href="/testler" className={["hidden lg:inline-flex", pill(isTestler)].join(" ")}>
-              Testler
-            </Link>
-
-            <ThemeToggle />
+          {/* Desktop Navigation */}
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Ana navigasyon">
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.matchPaths);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    active 
+                      ? "text-foreground" 
+                      : "text-muted hover:bg-surface2 hover:text-foreground"
+                  }`}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                  {active && (
+                    <span className="absolute inset-x-2 -bottom-3 h-0.5 rounded-full bg-accent" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
+
+          {/* Right side actions */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            
+            {/* Mobile menu button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:border-accent/40 hover:text-foreground md:hidden"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={mobileMenuOpen ? "Menuyu kapat" : "Menuyu ac"}
+            >
+              <span className="sr-only">{mobileMenuOpen ? "Menuyu kapat" : "Menu"}</span>
+              <div className="flex h-4 w-5 flex-col items-center justify-center gap-1">
+                <span 
+                  className={`h-0.5 w-full rounded-full bg-current transition-all duration-200 ${
+                    mobileMenuOpen ? "translate-y-1.5 rotate-45" : ""
+                  }`} 
+                />
+                <span 
+                  className={`h-0.5 w-full rounded-full bg-current transition-all duration-200 ${
+                    mobileMenuOpen ? "opacity-0" : ""
+                  }`} 
+                />
+                <span 
+                  className={`h-0.5 w-full rounded-full bg-current transition-all duration-200 ${
+                    mobileMenuOpen ? "-translate-y-1.5 -rotate-45" : ""
+                  }`} 
+                />
+              </div>
+            </button>
+          </div>
         </div>
       </Container>
-      {isReading ? (
-        <div aria-hidden="true" className="h-px w-full bg-border">
+
+      {/* Reading progress bar */}
+      {isReading && (
+        <div 
+          aria-hidden="true" 
+          className="absolute bottom-0 left-0 h-0.5 w-full bg-border"
+        >
           <div
-            className="h-px bg-foreground transition-[width] duration-150"
+            className="h-full bg-accent transition-[width] duration-150 ease-out"
             style={{ width: `${readProgress}%` }}
           />
         </div>
-      ) : null}
+      )}
+
+      {/* Mobile menu overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 top-[57px] z-50 bg-foreground/20 backdrop-blur-sm md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile menu */}
+      <nav
+        id="mobile-menu"
+        className={`fixed left-0 right-0 top-[57px] z-50 transform border-b border-border bg-background shadow-xl transition-all duration-300 ease-out md:hidden ${
+          mobileMenuOpen 
+            ? "translate-y-0 opacity-100" 
+            : "-translate-y-4 opacity-0 pointer-events-none"
+        }`}
+        aria-label="Mobil navigasyon"
+      >
+        <Container>
+          <div className="py-4">
+            <ul className="space-y-1">
+              {NAV_ITEMS.map((item) => {
+                const active = isActive(item.matchPaths);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center justify-between rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                        active 
+                          ? "bg-accent/10 text-accent" 
+                          : "text-foreground hover:bg-surface2"
+                      }`}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      {item.label}
+                      {active && (
+                        <span className="h-2 w-2 rounded-full bg-accent" />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-4 border-t border-border pt-4">
+              <Link
+                href="/search"
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base text-muted transition-colors hover:bg-surface2 hover:text-foreground"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Ara
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </nav>
     </header>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 type Variant = "hero" | "compact";
@@ -13,6 +13,23 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
     return () => window.clearTimeout(t);
   }, [value, delayMs]);
   return debounced;
+}
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  );
+}
+
+function LoadingSpinner({ className }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
 }
 
 export function SearchBar({
@@ -106,13 +123,14 @@ export function SearchBar({
           e.preventDefault();
           goToSearch(query);
         }}
-        className={[
-          "relative flex w-full items-center gap-3 border border-border bg-surface/80 px-4 py-3 shadow-sm backdrop-blur-sm",
-          "focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/20",
-          variant === "hero" ? "sm:px-5 sm:py-4" : "px-4 py-3",
-        ].join(" ")}
+        role="search"
+        className={`relative flex w-full items-center gap-3 rounded-xl border border-border bg-surface shadow-sm transition-all duration-200 ${
+          open && hasQuery ? "rounded-b-none border-b-transparent" : ""
+        } focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 ${
+          variant === "hero" ? "px-5 py-4" : "px-4 py-3"
+        }`}
       >
-        <span className="select-none text-muted">⌕</span>
+        <SearchIcon className="h-5 w-5 shrink-0 text-muted" />
         <input
           ref={inputRef}
           value={query}
@@ -154,70 +172,92 @@ export function SearchBar({
               if (s) goToDream(s.slug);
             }
           }}
-          placeholder="Bir sembol, duygu veya senaryo ara"
-          className={[
-            "w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted",
-            variant === "hero" ? "text-[15px] sm:text-base" : "text-sm",
-          ].join(" ")}
+          placeholder="Bir sembol, duygu veya senaryo ara..."
+          aria-label="Ruya ara"
+          aria-autocomplete="list"
+          aria-controls="search-suggestions"
+          aria-expanded={showDropdown}
+          className={`w-full bg-transparent text-foreground outline-none placeholder:text-muted/70 ${
+            variant === "hero" ? "text-base" : "text-sm"
+          }`}
           autoComplete="off"
           spellCheck={false}
         />
-        {loading ? <span className="text-xs text-muted">Aranıyor…</span> : null}
+        {loading && <LoadingSpinner className="h-5 w-5 text-accent" />}
         <button
           type="submit"
-          className={[
-            "bg-foreground px-6 py-2 text-xs font-medium uppercase tracking-wider text-background shadow-sm",
-            "transition-colors hover:bg-foreground/90",
-            variant === "compact" ? "hidden sm:block" : "",
-          ].join(" ")}
+          className={`shrink-0 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-accent/90 hover:shadow-md active:scale-95 ${
+            variant === "compact" ? "hidden sm:block" : ""
+          }`}
         >
           Ara
         </button>
       </form>
 
-      {showDropdown ? (
+      {showDropdown && (
         <div
+          id="search-suggestions"
           role="listbox"
-          aria-label="Arama önerileri"
-          className={[
-            "absolute z-20 mt-1 w-full overflow-hidden border border-border",
-            "bg-surface shadow-xl",
-          ].join(" ")}
+          aria-label="Arama onerileri"
+          className="absolute z-50 w-full overflow-hidden rounded-b-xl border border-t-0 border-border bg-surface shadow-xl"
         >
-          <div className="py-0">
-            {suggestions.length > 0 ? (
-              suggestions.map((s, idx) => {
+          {suggestions.length > 0 ? (
+            <ul className="max-h-80 overflow-y-auto py-2">
+              {suggestions.map((s, idx) => {
                 const active = idx === activeIndex;
                 return (
-                  <button
-                    key={s.slug}
-                    role="option"
-                    aria-selected={active}
-                    onMouseEnter={() => setActiveIndex(idx)}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => goToDream(s.slug)}
-                    className={[
-                      "flex w-full items-center justify-between gap-4 border-b border-border px-4 py-3 text-left last:border-0",
-                      active ? "bg-surface2" : "bg-transparent",
-                      "transition-colors",
-                    ].join(" ")}
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-foreground">{s.title}</div>
-                      <div className="truncate text-xs text-muted">{s.excerpt}</div>
-                    </div>
-                    <div className="hidden shrink-0 text-xs text-muted sm:block">{s.themes.slice(0, 2).join(" · ")}</div>
-                  </button>
+                  <li key={s.slug}>
+                    <button
+                      role="option"
+                      aria-selected={active}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => goToDream(s.slug)}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors ${
+                        active ? "bg-accent/5" : "hover:bg-surface2"
+                      }`}
+                    >
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                        <SearchIcon className="h-4 w-4 text-accent" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium text-foreground">{s.title}</div>
+                        <div className="mt-0.5 truncate text-sm text-muted">{s.excerpt}</div>
+                        {s.themes.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {s.themes.slice(0, 3).map((theme) => (
+                              <span 
+                                key={theme} 
+                                className="rounded-full bg-surface2 px-2 py-0.5 text-[10px] font-medium text-muted"
+                              >
+                                {theme}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  </li>
                 );
-              })
-            ) : (
-              <div className="px-4 py-4 text-sm text-muted">
-                {loading ? "Sonuçlar hazırlanıyor…" : "Eşleşen sonuç bulunamadı. Enter ile aramayı deneyin."}
-              </div>
-            )}
-          </div>
+              })}
+            </ul>
+          ) : (
+            <div className="px-4 py-8 text-center">
+              {loading ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-muted">
+                  <LoadingSpinner className="h-4 w-4" />
+                  Sonuclar hazirlaniyor...
+                </div>
+              ) : (
+                <div className="text-sm text-muted">
+                  <p>Eslesen sonuc bulunamadi.</p>
+                  <p className="mt-1 text-xs">Enter ile aramayi deneyin.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
