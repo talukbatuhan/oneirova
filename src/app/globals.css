@@ -1,18 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --font-inter: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Liberation Sans",
-    sans-serif;
-  --font-fraunces: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --background: #f6f8fc;
   --foreground: #0b1220;
   --surface: #ffffff;
   --surface2: #f1f5fb;
   --muted: #5c6b80;
   --border: #d8e2f0;
-  --accent: #6f5bff;
-  --accent2: #23b7a6;
-  --ring: #6f5bff;
+  --accent: #6366f1;
+  --accent2: #14b8a6;
+  --ring: #6366f1;
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -25,32 +23,83 @@
   --color-accent: var(--accent);
   --color-accent2: var(--accent2);
   --color-ring: var(--ring);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
 .theme-dark {
-  --background: #0b0f14;
-  --foreground: #e9eef5;
-  --surface: #111824;
-  --surface2: #162233;
-  --muted: #a8b3c3;
-  --border: #243246;
-  --accent: #b6a6ff;
-  --accent2: #8fe3d1;
-  --ring: #b6a6ff;
+  --background: #0a0d12;
+  --foreground: #f1f5f9;
+  --surface: #0f1419;
+  --surface2: #1a2332;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --accent: #818cf8;
+  --accent2: #2dd4bf;
+  --ring: #818cf8;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-:where(h1, h2, h3) {
+:where(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+  text-wrap: balance;
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--accent) 30%, transparent);
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+/* Focus visible styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition-property: background-color, border-color;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable transitions on page load */
+.no-transitions * {
+  transition: none !important;
+}
+
+/* Custom scrollbar */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+    border: 2px solid var(--surface);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
 }

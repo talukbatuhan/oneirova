@@ -4,22 +4,24 @@ import { Container } from "@/components/Container";
 import { DreamList } from "@/components/DreamList";
 import { SearchBar } from "@/components/SearchBar";
 import { SiteShell } from "@/components/SiteShell";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Rüya Tabirleri",
-  description: "A–Z rüya tabirleri dizini, popüler yorumlar ve en yeni içerikler.",
+  title: "Ruya Tabirleri - A'dan Z'ye Ruya Sozlugu",
+  description: "Binlerce ruya tabiri ve anlami. Ruyanda gorduklerinin ne anlama geldigini ogren. A-Z ruya sozlugu, populer yorumlar ve en yeni icerikler.",
   alternates: {
     canonical: "/ruyalar",
   },
   openGraph: {
     type: "website",
     url: "/ruyalar",
-    title: "Rüya Tabirleri",
-    description: "A–Z rüya tabirleri dizini, popüler yorumlar ve en yeni içerikler.",
+    title: "Ruya Tabirleri - A'dan Z'ye Ruya Sozlugu",
+    description: "Binlerce ruya tabiri ve anlami. Ruyanda gorduklerinin ne anlama geldigini ogren.",
   },
+  keywords: ["ruya tabirleri", "ruya yorumu", "ruya anlami", "ruya sozlugu", "ruya tabiri", "ruya gormek"],
 };
 
 export default async function DreamHubPage() {
@@ -28,85 +30,100 @@ export default async function DreamHubPage() {
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
 
   return (
-    <SiteShell mainClassName="pb-24 pt-8 sm:pt-10">
+    <SiteShell mainClassName="pb-24 pt-8 sm:pt-12">
       <Container>
-        <div className="mx-auto max-w-[72ch]">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl text-foreground">Rüya Tabirleri</h1>
-              <p className="mt-2 text-sm text-muted">
-                Sembol, duygu ve senaryoları arayın; A–Z gözatın; popüler ve en yeni yorumları keşfedin.
-              </p>
-            </div>
-            <Link href="/" className="text-sm text-muted transition-colors hover:text-foreground">
-              Ana sayfa
-            </Link>
-          </div>
+        <div className="mx-auto max-w-4xl">
+          <Breadcrumbs
+            items={[
+              { label: "Ana Sayfa", href: "/" },
+              { label: "Ruya Tabirleri" },
+            ]}
+          />
 
-          <div className="mt-6">
+          {/* Header */}
+          <header className="text-center">
+            <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
+              Ruya Tabirleri
+            </h1>
+            <p className="mx-auto mt-4 max-w-lg text-base text-muted">
+              Sembol, duygu ve senaryolari arayin. A-Z gozatin, populer ve en yeni yorumlari kesfedin.
+            </p>
+          </header>
+
+          {/* Search */}
+          <div className="mx-auto mt-8 max-w-xl">
             <SearchBar variant="hero" />
           </div>
-
-
         </div>
 
-        <section id="az" className="mt-14 scroll-mt-24">
-          <div className="flex items-end justify-between gap-6">
-            <h2 className="text-lg text-foreground">A–Z gözat</h2>
-            <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
-              Dizini aç
+        {/* A-Z Section */}
+        <section id="az" className="mt-14 scroll-mt-24" aria-labelledby="az-heading">
+          <div className="flex items-center justify-between gap-4">
+            <h2 id="az-heading" className="font-serif text-xl text-foreground">A-Z Gozat</h2>
+            <Link 
+              href="/browse/a" 
+              className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent/80"
+            >
+              Dizini ac
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {letters.map((l) => (
-              <Link
-                key={l}
-                href={`/browse/${l}`}
-                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground"
-              >
-                {l.toUpperCase()}
-              </Link>
-            ))}
-          </div>
+          <nav className="mt-4" aria-label="Alfabe navigasyonu">
+            <div className="flex flex-wrap gap-2">
+              {letters.map((l) => (
+                <Link
+                  key={l}
+                  href={`/browse/${l}`}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-sm font-medium text-muted transition-all hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
+                  aria-label={`${l.toUpperCase()} harfi ile baslayan ruyalar`}
+                >
+                  {l.toUpperCase()}
+                </Link>
+              ))}
+            </div>
+          </nav>
         </section>
 
-        <div className="mt-14 grid gap-10 lg:grid-cols-2">
-          <section id="populer" className="scroll-mt-24">
-            <div className="flex items-end justify-between gap-6">
-              <h2 className="text-lg text-foreground">Haftanın en çok okunanları</h2>
-              <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
-                A–Z
+        {/* Content Grid */}
+        <div className="mt-14 grid gap-12 lg:grid-cols-2">
+          <section id="populer" className="scroll-mt-24" aria-labelledby="popular-heading">
+            <div className="flex items-center justify-between gap-4">
+              <h2 id="popular-heading" className="font-serif text-xl text-foreground">Haftanin En Cok Okunanlari</h2>
+              <Link 
+                href="/browse/a" 
+                className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent/80"
+              >
+                A-Z
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
             <div className="mt-4">
-              <div className="md:hidden">
-                <DreamList dreams={trending} variant="cards" />
-              </div>
-              <div className="hidden md:block">
-                <DreamList dreams={trending} />
-              </div>
+              <DreamList dreams={trending} variant="cards" />
             </div>
           </section>
 
-          <section id="en-yeni" className="scroll-mt-24">
-            <div className="flex items-end justify-between gap-6">
-              <h2 className="text-lg text-foreground">En yeni</h2>
-              <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
-                Gözat
+          <section id="en-yeni" className="scroll-mt-24" aria-labelledby="latest-heading">
+            <div className="flex items-center justify-between gap-4">
+              <h2 id="latest-heading" className="font-serif text-xl text-foreground">En Yeni</h2>
+              <Link 
+                href="/browse/a" 
+                className="flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent/80"
+              >
+                Gozat
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
             <div className="mt-4">
-              <div className="md:hidden">
-                <DreamList dreams={latest} variant="cards" />
-              </div>
-              <div className="hidden md:block">
-                <DreamList dreams={latest} />
-              </div>
+              <DreamList dreams={latest} variant="cards" />
             </div>
           </section>
         </div>
-
-
       </Container>
     </SiteShell>
   );
