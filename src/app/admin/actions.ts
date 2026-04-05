@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/admin/auth";
 import { cmsDeleteDream, cmsUpsertDream } from "@/lib/cms/dreams";
 import type { CmsDreamStatus } from "@/lib/cms/dreams";
 
@@ -145,6 +146,7 @@ function parseDreamPayload(value: FormDataEntryValue | null, returnTo: string) {
 }
 
 export async function saveDreamAction(formData: FormData) {
+  await requireAdmin();
   const returnTo = safeReturnTo(formData.get("returnTo"));
   const fromPayload = parseDreamPayload(formData.get("payload"), returnTo);
 
@@ -178,6 +180,7 @@ export async function saveDreamAction(formData: FormData) {
 }
 
 export async function deleteDreamAction(formData: FormData) {
+  await requireAdmin();
   const slug = String(formData.get("slug") ?? "").trim();
   if (!slug) redirect("/admin");
   await cmsDeleteDream(slug);

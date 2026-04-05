@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_COOKIE_NAME } from "@/lib/admin/auth";
+import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
+import { verifyAdminSessionToken } from "@/lib/admin/session";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname.startsWith("/ruya/")) {
@@ -21,7 +22,7 @@ export function middleware(req: NextRequest) {
   if (pathname === "/admin/login") return NextResponse.next();
 
   const cookie = req.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  if (cookie === "1") return NextResponse.next();
+  if (await verifyAdminSessionToken(cookie)) return NextResponse.next();
 
   const url = req.nextUrl.clone();
   url.pathname = "/admin/login";

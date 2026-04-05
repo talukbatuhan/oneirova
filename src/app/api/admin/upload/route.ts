@@ -1,27 +1,48 @@
+import { isAdminSession } from "@/lib/admin/auth";
+import {
+  ADMIN_UPLOAD_BUCKET,
+  sanitizeUploadPath,
+  validateAdminImageUpload,
+} from "@/lib/admin/uploadValidate";
 import { uploadToBucket } from "@/lib/supabase/storage";
-import { cookies } from "next/headers";
-import { ADMIN_COOKIE_NAME } from "@/lib/admin/auth";
 
 export async function POST(req: Request) {
-  const jar = await cookies();
-  if (jar.get(ADMIN_COOKIE_NAME)?.value !== "1") return new Response("Unauthorized", { status: 401 });
+  if (!(await isAdminSession())) {
+    return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  }
 
   const form = await req.formData();
-  const bucket = String(form.get("bucket") ?? "oneirova");
-  const path = String(form.get("path") ?? "");
+  const pathRaw = String(form.get("path") ?? "");
   const file = form.get("file");
 
-  if (!path) return new Response("path required", { status: 400 });
-  if (!(file instanceof File)) return new Response("file required", { status: 400 });
+  const path = sanitizeUploadPath(pathRaw);
+  if (!path) {
+    return Response.json(
+      { error: "Geçersiz veya eksik path (yalnızca güvenli karakterler ve / ile klasör)." },
+      { status: 400 },
+    );
+  }
 
-  const uploaded = await uploadToBucket({
-    bucket,
-    path,
-    data: file,
-    contentType: file.type || undefined,
-    upsert: true,
-  });
+  if (!(file instanceof File)) {
+    return Response.json({ error: "Dosya gerekli." }, { status: 400 });
+  }
 
-  return Response.json(uploaded);
+  const validated = await validateAdminImageUpload(file);
+  if (!validated.ok) {
+    return Response.json({ error: validated.error }, { status: 400 });
+  }
+
+  try {
+    const uploaded = await uploadToBucket({
+      bucket: ADMIN_UPLOAD_BUCKET,
+      path,
+      data: validated.buffer,
+      contentType: validated.contentType,
+      upsert: true,
+    });
+    return Response.json(uploaded);
+  } catch (e) {
+    console.error("admin upload:", e);
+    return Response.json({ error: "Yükleme başarısız." }, { status: 500 });
+  }
 }
-

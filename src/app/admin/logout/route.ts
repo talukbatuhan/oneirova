@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { ADMIN_COOKIE_NAME } from "@/lib/admin/auth";
+import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
 
 export async function POST(req: Request) {
   const jar = await cookies();

@@ -8,7 +8,8 @@ import { DreamList } from "@/components/DreamList";
 import { DreamReadCounter } from "@/components/DreamReadCounter";
 import { ShareMenu } from "@/components/ShareMenu";
 import { SiteShell } from "@/components/SiteShell";
-import { ADMIN_COOKIE_NAME } from "@/lib/admin/auth";
+import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
+import { verifyAdminSessionToken } from "@/lib/admin/session";
 import type { DreamEntry } from "@/lib/dreams";
 import { getDreamBySlug, getDreams } from "@/lib/dreams";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -63,7 +64,7 @@ export async function generateMetadata({
   const sp = (await searchParams) ?? {};
 
   const jar = await cookies();
-  const isAdmin = jar.get(ADMIN_COOKIE_NAME)?.value === "1";
+  const isAdmin = await verifyAdminSessionToken(jar.get(ADMIN_COOKIE_NAME)?.value);
   const preview = isAdmin && String(sp.preview ?? "") === "1";
 
   const dream = await getDreamForRequest({ slug: p.slug, preview });
@@ -136,7 +137,7 @@ export default async function DreamPage({
   const sp = (await searchParams) ?? {};
 
   const jar = await cookies();
-  const isAdmin = jar.get(ADMIN_COOKIE_NAME)?.value === "1";
+  const isAdmin = await verifyAdminSessionToken(jar.get(ADMIN_COOKIE_NAME)?.value);
   const preview = isAdmin && String(sp.preview ?? "") === "1";
 
   const dream = await getDreamForRequest({ slug: p.slug, preview });

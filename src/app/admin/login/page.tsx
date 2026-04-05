@@ -1,8 +1,15 @@
 import { Container } from "@/components/Container";
 import { SiteHeader } from "@/components/SiteHeader";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_COOKIE_NAME, verifyAdminPassword } from "@/lib/admin/auth";
+import { createAdminSessionToken } from "@/lib/admin/session";
+import {
+  clearLoginFailures,
+  clientKeyFromHeaders,
+  isLoginRateLimited,
+  registerLoginFailure,
+} from "@/lib/admin/loginRateLimit";
 
 async function loginAction(formData: FormData) {
   "use server";
@@ -10,12 +17,30 @@ async function loginAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/admin");
 
+  const h = await headers();
+  const clientKey = clientKeyFromHeaders(h);
+  if (isLoginRateLimited(clientKey)) {
+    redirect(
+      `/admin/login?next=${encodeURIComponent(next)}&err=${encodeURIComponent("Çok fazla deneme. Bir süre sonra tekrar deneyin.")}`,
+    );
+  }
+
   if (!verifyAdminPassword(password)) {
+    registerLoginFailure(clientKey);
     redirect(`/admin/login?next=${encodeURIComponent(next)}&err=${encodeURIComponent("Hatalı şifre.")}`);
   }
 
+  clearLoginFailures(clientKey);
+
+  const token = await createAdminSessionToken();
+  if (!token) {
+    redirect(
+      `/admin/login?next=${encodeURIComponent(next)}&err=${encodeURIComponent("ADMIN_SESSION_SECRET eksik veya çok kısa (en az 16 karakter). .env.local dosyasını kontrol edin.")}`,
+    );
+  }
+
   const jar = await cookies();
-  jar.set(ADMIN_COOKIE_NAME, "1", {
+  jar.set(ADMIN_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
