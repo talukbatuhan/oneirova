@@ -32,9 +32,13 @@ export const metadata: Metadata = {
     default: "Oneirova",
     template: "%s · Oneirova",
   },
-  description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
+  description:
+    "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
   verification: {
-    google: "W3Xx9nB9vPXB9lgCKvaHf2k_WxgRoB3PA95I5exM2Lc",
+    google: "W3Xx9nB9vPXB9lgCKvaHf2k_WxgRoB3PA95I5exM2Lc", // Search Console için kalsın
+  },
+  other: {
+    "google-adsense-account": "ca-pub-1180623149281816", // AdSense için asıl gereken bu
   },
   icons: {
     icon: [{ url: "/favicon.ico" }],
@@ -45,12 +49,14 @@ export const metadata: Metadata = {
     url: "https://www.oneirova.com",
     siteName: "Oneirova",
     title: "Oneirova",
-    description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
+    description:
+      "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Oneirova",
-    description: "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
+    description:
+      "Rüyalar, astroloji, numeroloji ve kişilik testleri: kendini keşfetmek için sade bir deneyim.",
   },
   robots: {
     index: true,
@@ -68,7 +74,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" suppressHydrationWarning className={`${inter.variable} ${fraunces.variable}`}>
+    <html
+      lang="tr"
+      suppressHydrationWarning
+      className={`${inter.variable} ${fraunces.variable}`}
+    >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <script
           dangerouslySetInnerHTML={{
