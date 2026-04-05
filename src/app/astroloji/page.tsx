@@ -198,6 +198,25 @@ export default async function AstrologyPage({ searchParams }: { searchParams?: P
               </p>
             </div>
           )}
+          {/* Cross-link keşif */}
+          <section className="mt-16 rounded-2xl border border-border bg-surface px-6 py-6">
+            <div className="text-sm font-medium text-foreground">Burçtan öteye</div>
+            <p className="mt-1 text-xs text-muted">Astrolojiden ilham aldın mı? Rüyalarınla da bağlantı kur.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link href="/ruyalar" className="rounded-full border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground">
+                Rüya tabirleri
+              </Link>
+              <Link href="/search?q=yıldız" className="rounded-full border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground">
+                Yıldız rüyaları
+              </Link>
+              <Link href="/numeroloji" className="rounded-full border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground">
+                Numeroloji
+              </Link>
+              <Link href="/testler" className="rounded-full border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground">
+                Kişilik testleri
+              </Link>
+            </div>
+          </section>
         </div>
       </Container>
     </SiteShell>

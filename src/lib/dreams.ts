@@ -698,6 +698,14 @@ export async function getWeeklyTrendingDreams(limit: number): Promise<DreamEntry
   return picked.slice(0, limit);
 }
 
+export async function getDailyDream(): Promise<DreamEntry | null> {
+  const all = await getDreams();
+  if (all.length === 0) return null;
+  const today = new Date();
+  const dayIndex = (today.getFullYear() * 1000 + today.getMonth() * 31 + today.getDate()) % all.length;
+  return all[dayIndex] ?? all[0] ?? null;
+}
+
 export async function getDreamThemes(): Promise<string[]> {
   const list = await getDreams();
   const set = new Set<string>();
@@ -724,6 +732,13 @@ function indexLetter(value: string): string {
     ü: "u",
   };
   return map[ch] ?? ch;
+}
+
+/** `/browse/[letter]` için a–z harf; türetilemezse `a`. */
+export function dreamBrowseLetter(title: string): string {
+  const L = indexLetter(title).slice(0, 1).toLowerCase();
+  if (L && /^[a-z]$/.test(L)) return L;
+  return "a";
 }
 
 export async function getDreamsByLetter(letter: string): Promise<DreamEntry[]> {

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@/components/Analytics";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,8 +42,15 @@ export const metadata: Metadata = {
   other: {
     "google-adsense-account": "ca-pub-1180623149281816", // AdSense için asıl gereken bu
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Oneirova",
+  },
   icons: {
     icon: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/icons/icon-192.png" }],
   },
   openGraph: {
     type: "website",
@@ -92,6 +101,8 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1180623149281816"
           crossOrigin="anonymous"
         />
+        <Analytics />
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Container } from "@/components/Container";
+import { AdDisplaySlot } from "@/components/AdDisplaySlot";
 import { DreamList } from "@/components/DreamList";
 import { DreamReadCounter } from "@/components/DreamReadCounter";
 import { ShareMenu } from "@/components/ShareMenu";
@@ -11,7 +12,13 @@ import { SiteShell } from "@/components/SiteShell";
 import { ADMIN_COOKIE_NAME } from "@/lib/admin/constants";
 import { verifyAdminSessionToken } from "@/lib/admin/session";
 import type { DreamEntry } from "@/lib/dreams";
-import { getDreamBySlug, getDreams } from "@/lib/dreams";
+import {
+  dreamBrowseLetter,
+  getDreamBySlug,
+  getDreams,
+  getDreamsByLetter,
+  getLatestDreams,
+} from "@/lib/dreams";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function getDreamForRequest(params: {
@@ -52,6 +59,18 @@ async function getDreamForRequest(params: {
 
 type DreamPageParams = { slug: string };
 type DreamPageSearchParams = { [key: string]: string | string[] | undefined };
+
+function formatUpdatedLabel(iso: string): string | null {
+  const t = iso?.trim();
+  if (!t) return null;
+  const ms = Date.parse(t);
+  if (Number.isNaN(ms)) return null;
+  return new Date(ms).toLocaleDateString("tr-TR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -125,6 +144,33 @@ async function relatedDreams(slug: string) {
     .slice(0, 8)
     .map((x) => x.d);
 }
+
+async function mergeRelatedForDisplay(slug: string, thematic: DreamEntry[]): Promise<DreamEntry[]> {
+  const seen = new Set<string>([slug]);
+  const out: DreamEntry[] = [];
+  for (const d of thematic) {
+    if (out.length >= 8) break;
+    out.push(d);
+    seen.add(d.slug);
+  }
+  if (out.length < 8) {
+    const latest = await getLatestDreams(24);
+    for (const d of latest) {
+      if (out.length >= 8) break;
+      if (!seen.has(d.slug)) {
+        out.push(d);
+        seen.add(d.slug);
+      }
+    }
+  }
+  return out;
+}
+
+const DISCOVER_LINKS = [
+  { href: "/astroloji", label: "Astroloji" },
+  { href: "/numeroloji", label: "Numeroloji" },
+  { href: "/testler", label: "Kişilik testleri" },
+] as const;
 
 export default async function DreamPage({
   params,
@@ -219,8 +265,16 @@ export default async function DreamPage({
     ...(faqJsonLd ? [faqJsonLd] : []),
   ];
 
-  const related = await relatedDreams(dream.slug);
+  const relatedThematic = await relatedDreams(dream.slug);
+  const mergedRelated = await mergeRelatedForDisplay(dream.slug, relatedThematic);
+  const browseLetter = dreamBrowseLetter(dream.title);
+  const sameLetterOthers =
+    relatedThematic.length < 3
+      ? (await getDreamsByLetter(browseLetter)).filter((d) => d.slug !== dream.slug).slice(0, 6)
+      : [];
+
   const coverImageUrl = dream.coverImageUrl || "";
+  const updatedLabel = formatUpdatedLabel(dream.updatedAt);
 
   function toId(input: string): string {
     return input
@@ -243,10 +297,28 @@ export default async function DreamPage({
     return { ...s, id };
   });
 
+  const tocNav = (
+    <nav aria-label="İçindekiler">
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted">İçindekiler</div>
+      <ul className="mt-3 space-y-2">
+        {sections.map((s) => (
+          <li key={s.id}>
+            <a
+              href={`#${s.id}`}
+              className="block rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-surface2 hover:text-foreground"
+            >
+              {s.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+
   return (
     <SiteShell mainClassName="pb-24 pt-10">
       <Container>
-        <div className="mx-auto max-w-[72ch]">
+        <div className="mx-auto max-w-6xl">
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -259,7 +331,7 @@ export default async function DreamPage({
             ]}
           />
           <div className="flex flex-wrap items-start justify-between gap-6">
-            <div className="min-w-0">
+            <div className="min-w-0 max-w-[72ch]">
               {preview ? (
                 <div className="mb-5 inline-flex rounded-full border border-border bg-surface px-4 py-2 text-xs text-muted">
                   Taslak önizleme
@@ -272,8 +344,11 @@ export default async function DreamPage({
                 {dream.excerpt}
               </p>
 
-              <div className="mt-5 flex flex-wrap items-center gap-2">
+              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <DreamReadCounter slug={dream.slug} />
+                {updatedLabel ? (
+                  <span className="text-sm text-muted">Son güncelleme: {updatedLabel}</span>
+                ) : null}
               </div>
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
@@ -315,59 +390,140 @@ export default async function DreamPage({
             <ShareMenu title={dream.title} />
           </div>
 
-          {sections.length >= 2 ? (
-            <section className="mt-8 rounded-2xl border border-border bg-surface px-6 py-6">
-              <div className="text-sm font-medium text-foreground">İçindekiler</div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {sections.map((s) => (
-                  <a
-                    key={s.id}
-                    href={`#${s.id}`}
-                    className="rounded-full border border-border bg-background px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
-                  >
-                    {s.title}
-                  </a>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          <div
+            className={
+              sections.length >= 2
+                ? "mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start lg:gap-12"
+                : "mt-8"
+            }
+          >
+            <div className="min-w-0 max-w-[72ch]">
+              {sections.length >= 2 ? (
+                <section className="rounded-2xl border border-border bg-surface px-6 py-6 lg:hidden">
+                  <div className="text-sm font-medium text-foreground">İçindekiler</div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {sections.map((s) => (
+                      <a
+                        key={s.id}
+                        href={`#${s.id}`}
+                        className="rounded-full border border-border bg-background px-4 py-2 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+                      >
+                        {s.title}
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
 
-          <section className="mt-10 rounded-2xl border border-border bg-surface px-6 py-6">
-            <h2 className="text-base text-foreground">Hızlı anlam</h2>
-            <ul className="mt-4 space-y-2 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">
-              {dream.quickMeaning.map((m) => (
-                <li key={m} className="flex gap-3">
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                  <span>{m}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <article className="mt-10 space-y-10">
-            {sections.map((s) => (
-              <section key={s.id} id={s.id} className="scroll-mt-24">
-                <h2 className="text-lg text-foreground">{s.title}</h2>
-                <div className="mt-4 space-y-4 text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
-                  {s.body.map((p) => (
-                    <p key={p}>{p}</p>
+              <section
+                className={
+                  sections.length >= 2
+                    ? "mt-10 rounded-2xl border border-border bg-surface px-6 py-6 lg:mt-0"
+                    : "mt-10 rounded-2xl border border-border bg-surface px-6 py-6"
+                }
+              >
+                <h2 className="text-base text-foreground">Hızlı anlam</h2>
+                <ul className="mt-4 space-y-2 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">
+                  {dream.quickMeaning.map((m) => (
+                    <li key={m} className="flex gap-3">
+                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                      <span>{m}</span>
+                    </li>
                   ))}
+                </ul>
+              </section>
+
+              <article className="mt-10 space-y-10">
+                {sections.map((s) => (
+                  <section key={s.id} id={s.id} className="scroll-mt-24">
+                    <h2 className="text-lg text-foreground">{s.title}</h2>
+                    <div className="mt-4 space-y-4 text-base leading-7 text-muted sm:text-[17px] sm:leading-8">
+                      {s.body.map((p) => (
+                        <p key={p}>{p}</p>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </article>
+
+              <div className="mt-12">
+                <AdDisplaySlot />
+              </div>
+
+              <section className="mt-10 rounded-2xl border border-border bg-surface px-6 py-5">
+                <div className="text-sm font-medium text-foreground">Başka ne var?</div>
+                <p className="mt-1 text-xs text-muted">Rüyanın yanında site genelinde keşfedebileceklerin.</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {DISCOVER_LINKS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-full border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <Link
+                    href="/ruyalar"
+                    className="rounded-full border border-border bg-background px-4 py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+                  >
+                    Tüm rüyalar
+                  </Link>
                 </div>
               </section>
-            ))}
-          </article>
 
-          <section className="mt-14">
-            <div className="flex items-end justify-between gap-6">
-              <h2 className="text-lg text-foreground">Buna benzer rüyalar</h2>
-              <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
-                A–Z gözat
-              </Link>
+              <section className="mt-14">
+                <div className="flex items-end justify-between gap-6">
+                  <h2 className="text-lg text-foreground">Buna benzer ve önerilen rüyalar</h2>
+                  <Link href="/browse/a" className="text-sm text-muted transition-colors hover:text-foreground">
+                    A–Z gözat
+                  </Link>
+                </div>
+                <div className="mt-4">
+                  <DreamList dreams={mergedRelated} variant="cards" />
+                </div>
+              </section>
+
+              {sameLetterOthers.length > 0 ? (
+                <section className="mt-14">
+                  <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg text-foreground">
+                        {browseLetter.toUpperCase()} harfiyle devam et
+                      </h2>
+                      <p className="mt-1 text-sm text-muted">
+                        Benzer temada az sonuç varken aynı harfle başlayan diğer tabirlere göz atın.
+                      </p>
+                    </div>
+                    <Link
+                      href={`/browse/${browseLetter}`}
+                      className="shrink-0 text-sm text-muted transition-colors hover:text-foreground"
+                    >
+                      Tümünü listele
+                    </Link>
+                  </div>
+                  <div className="mt-4">
+                    <DreamList dreams={sameLetterOthers} variant="rows" />
+                  </div>
+                </section>
+              ) : null}
             </div>
-            <div className="mt-4">
-              <DreamList dreams={related.slice(0, 4)} variant="cards" />
-            </div>
-          </section>
+
+            {sections.length >= 2 ? (
+              <aside className="sticky top-28 mt-10 hidden self-start rounded-2xl border border-border bg-surface/90 p-5 backdrop-blur-sm lg:mt-0 lg:block">
+                {tocNav}
+                <div className="mt-6 border-t border-border pt-6">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted">Hızlı link</div>
+                  <Link
+                    href={`/browse/${browseLetter}`}
+                    className="mt-2 block text-sm text-accent transition-colors hover:text-accent/80"
+                  >
+                    {browseLetter.toUpperCase()} harfine gözat
+                  </Link>
+                </div>
+              </aside>
+            ) : null}
+          </div>
         </div>
       </Container>
     </SiteShell>

@@ -5,7 +5,8 @@ import { DreamList } from "@/components/DreamList";
 import { SearchBar } from "@/components/SearchBar";
 import { SiteShell } from "@/components/SiteShell";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
+import { JsonLd } from "@/components/JsonLd";
+import { getDreamThemes, getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
 
 export const revalidate = 3600;
 
@@ -27,10 +28,24 @@ export const metadata: Metadata = {
 export default async function DreamHubPage() {
   const trending = await getWeeklyTrendingDreams(8);
   const latest = await getLatestDreams(6);
+  const themeList = (await getDreamThemes()).slice(0, 14);
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Popüler Rüya Tabirleri",
+    itemListElement: trending.map((d, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `https://www.oneirova.com/ruya/${d.slug}`,
+      name: d.title,
+    })),
+  };
 
   return (
     <SiteShell mainClassName="pb-24 pt-8 sm:pt-12">
+      <JsonLd data={itemListSchema} />
       <Container>
         <div className="mx-auto max-w-4xl">
           <Breadcrumbs
@@ -54,6 +69,28 @@ export default async function DreamHubPage() {
           <div className="mx-auto mt-8 max-w-xl">
             <SearchBar variant="hero" />
           </div>
+
+          {themeList.length > 0 ? (
+            <section className="mx-auto mt-10 max-w-3xl" aria-labelledby="themes-heading">
+              <h2 id="themes-heading" className="text-center text-sm font-medium text-foreground">
+                Popüler temalar
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-center text-xs text-muted">
+                Bir temaya tıklayarak o konuda örnek aramalarla içeriklere dalın.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {themeList.map((t) => (
+                  <Link
+                    key={t}
+                    href={`/search?q=${encodeURIComponent(t)}`}
+                    className="rounded-full border border-border bg-surface px-4 py-2 text-sm text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+                  >
+                    {t}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
 
         {/* A-Z Section */}

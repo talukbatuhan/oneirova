@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/Container";
-
+import { LoadMoreDreams } from "@/components/LoadMoreDreams";
 import { SiteShell } from "@/components/SiteShell";
-import { getDreamsByLetter } from "@/lib/dreams";
+import { getDreamThemes, getDreamsByLetter } from "@/lib/dreams";
 
 type BrowseLetterParams = { letter: string };
 
@@ -37,6 +37,7 @@ export default async function BrowseLetterPage({ params }: { params: Promise<Bro
 
   const dreams = await getDreamsByLetter(letter);
   const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+  const themeChips = (await getDreamThemes()).slice(0, 12);
 
   return (
     <SiteShell mainClassName="pb-24 pt-10">
@@ -45,13 +46,25 @@ export default async function BrowseLetterPage({ params }: { params: Promise<Bro
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl text-foreground">{letter.toUpperCase()} harfine gözat</h1>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
+                Başlığı bu harfle başlayan rüya tabirleri. İsterseniz{" "}
+                <Link href="/ruyalar" className="text-foreground underline-offset-4 hover:underline">
+                  rüya rehberine
+                </Link>{" "}
+                dönün veya arama ile devam edin.
+              </p>
               <p className="mt-2 text-sm text-muted">
                 <span className="text-foreground">{dreams.length}</span> kayıt
               </p>
             </div>
-            <Link href="/" className="text-sm text-muted transition-colors hover:text-foreground">
-              Ana sayfa
-            </Link>
+            <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+              <Link href="/search" className="text-sm text-muted transition-colors hover:text-foreground">
+                Arama
+              </Link>
+              <Link href="/" className="text-sm text-muted transition-colors hover:text-foreground">
+                Ana sayfa
+              </Link>
+            </div>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">
@@ -71,48 +84,33 @@ export default async function BrowseLetterPage({ params }: { params: Promise<Bro
             ))}
           </div>
 
-          <div className="mt-8">
-            {dreams.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-surface px-5 py-10 text-center text-sm text-muted">
-                Bu harfle başlayan bir rüya tabiri bulunamadı.
+          {themeChips.length > 0 ? (
+            <div className="mt-6">
+              <div className="text-xs font-medium uppercase tracking-wider text-muted">Temalar</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {themeChips.map((t) => (
+                  <Link
+                    key={t}
+                    href={`/search?q=${encodeURIComponent(t)}`}
+                    className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-muted transition-colors hover:border-accent/60 hover:text-foreground"
+                  >
+                    {t}
+                  </Link>
+                ))}
               </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {dreams.map((d) => {
-                  const rawTitle = String(d.title ?? "").trim();
-                  const isAlready = /^rüyada\s/i.test(rawTitle);
-                  const parts = rawTitle.split(/\s+/).filter(Boolean);
-                  const formatted = isAlready ? rawTitle : parts.length <= 1 ? `Rüyada ${rawTitle} Görmek` : `Rüyada ${rawTitle}`;
-                  const excerpt = String(d.excerpt ?? "").trim();
+            </div>
+          ) : null}
 
-                  return (
-                    <Link
-                      key={d.slug}
-                      href={`/ruya/${d.slug}`}
-                      className={[
-                        "group rounded-2xl border border-border bg-surface/80 px-5 py-5 shadow-sm backdrop-blur-sm",
-                        "transition-colors hover:border-accent/60 hover:bg-surface2 hover:shadow-md",
-                      ].join(" ")}
-                    >
-                      <div className="text-base font-medium leading-snug text-foreground">{formatted}</div>
-                      <div className="mt-2 text-sm leading-6 text-muted">{excerpt || "Kısa açıklama yakında."}</div>
-                      {d.themes?.length ? (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {d.themes.slice(0, 2).map((t) => (
-                            <span
-                              key={t}
-                              className="rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted"
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+          <div className="mt-8">
+            <LoadMoreDreams
+              items={dreams.map((d) => ({
+                slug: d.slug,
+                title: d.title,
+                excerpt: d.excerpt,
+                themes: d.themes,
+              }))}
+              pageSize={12}
+            />
           </div>
         </div>
       </Container>

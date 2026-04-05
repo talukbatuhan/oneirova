@@ -64,10 +64,19 @@ body {
   background: color-mix(in oklab, var(--accent) 35%, transparent);
 }
 
-/* Focus visible styles for accessibility */
+/* Focus visible — klavye gezintisi; ring-offset arka planla kontrast */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+/* İçerik bölüm başlıkları (isteğe bağlı sınıf) */
+.section-heading {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
 }
 
 /* Smooth transitions for theme changes */

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { SearchBar } from "@/components/SearchBar";
 import { SiteShell } from "@/components/SiteShell";
-import { getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
+import { getDailyDream, getLatestDreams, getWeeklyTrendingDreams } from "@/lib/dreams";
 
 export const metadata: Metadata = {
   title: "Oneirova - Ruyalar, Astroloji ve Numeroloji",
@@ -158,45 +159,46 @@ function SquareCardGrid({ items }: { items: { title: string; href: string; image
 export default async function Home() {
   const dreamPopular = await getWeeklyTrendingDreams(6);
   const dreamNew = await getLatestDreams(6);
+  const dailyDream = await getDailyDream();
 
   const astroPopular: HomeCard[] = [
     {
-      title: "Burç temaları",
-      excerpt: "12 burcun motivasyonları ve gölge tarafı üzerine kısa okuma.",
-      href: "/astroloji",
+      title: "Koç burcu",
+      excerpt: "Başlatır, hızlanır, cesaret eder.",
+      href: "/astroloji?burc=koc",
       meta: "Popüler",
     },
     {
-      title: "Uyumluluk",
-      excerpt: "İlişkilerde iletişim dili ve ihtiyaçlar: pratik yaklaşım.",
-      href: "/astroloji",
+      title: "Aslan burcu",
+      excerpt: "Parlar, sahne alır, yaratır.",
+      href: "/astroloji?burc=aslan",
       meta: "Popüler",
     },
     {
-      title: "Günün gökyüzü",
-      excerpt: "Bugün tempo, ilişki ve iş odağı için yumuşak yönlendirme.",
-      href: "/astroloji",
+      title: "Akrep burcu",
+      excerpt: "Derine iner, dönüştürür, gerçeği arar.",
+      href: "/astroloji?burc=akrep",
       meta: "Popüler",
     },
   ];
 
   const astroNew: HomeCard[] = [
     {
-      title: "Haftalık odak",
-      excerpt: "Bir haftalık niyet ve aksiyon cümlesiyle sade plan.",
-      href: "/astroloji",
+      title: "Balık burcu",
+      excerpt: "Sezer, akar, şefkatle kapsar.",
+      href: "/astroloji?burc=balik",
       meta: "Yeni",
     },
     {
-      title: "Transit notları",
-      excerpt: "Kısa: tetiklenen tema, fırsat, dikkat noktası.",
-      href: "/astroloji",
+      title: "İkizler burcu",
+      excerpt: "Merak eder, bağ kurar, anlatır.",
+      href: "/astroloji?burc=ikizler",
       meta: "Yeni",
     },
     {
-      title: "Ay döngüsü",
-      excerpt: "Başlat · büyüt · bırak ritmiyle içgörü kartları.",
-      href: "/astroloji",
+      title: "Terazi burcu",
+      excerpt: "Dengeler, uzlaştırır, estetik kurar.",
+      href: "/astroloji?burc=terazi",
       meta: "Yeni",
     },
   ];
@@ -205,13 +207,13 @@ export default async function Home() {
     {
       title: "Hayat yolu sayısı",
       excerpt: "Doğum tarihinden temel eğilimi çıkar: kısa özet.",
-      href: "/numeroloji",
+      href: "/numeroloji#hesapla",
       meta: "Popüler",
     },
     {
       title: "Gün sayısı",
       excerpt: "Bugünün enerjisi için hızlı bir odak cümlesi.",
-      href: "/numeroloji",
+      href: "/numeroloji#hesapla",
       meta: "Popüler",
     },
     {
@@ -244,19 +246,44 @@ export default async function Home() {
   ];
 
   const testsPopular: HomeCard[] = [
-    { title: "Big Five (mini)", excerpt: "5 boyutta hızlı profil", href: "/testler", meta: "Popüler" },
-    { title: "Enneagram (mini)", excerpt: "Motivasyon odağı", href: "/testler", meta: "Popüler" },
-    { title: "Aşk dili (mini)", excerpt: "İletişim tercihleri", href: "/testler", meta: "Popüler" },
+    { title: "Big Five (mini)", excerpt: "5 boyutta hızlı profil", href: "/testler#big-five", meta: "Popüler" },
+    { title: "Enneagram (mini)", excerpt: "Motivasyon odağı", href: "/testler#enneagram", meta: "Popüler" },
+    { title: "Aşk dili (mini)", excerpt: "İletişim tercihleri", href: "/testler#ask-dili", meta: "Popüler" },
   ];
 
   const testsNew: HomeCard[] = [
-    { title: "Stres tepkisi", excerpt: "Zorlanınca hangi moda giriyorsun?", href: "/testler", meta: "Yeni" },
-    { title: "Odak stili", excerpt: "Kısa dikkat mi derin çalışma mı?", href: "/testler", meta: "Yeni" },
-    { title: "Sosyal enerji", excerpt: "Şarj olma şeklin: kalabalık mı yalnızlık mı?", href: "/testler", meta: "Yeni" },
+    { title: "Stres tepkisi", excerpt: "Zorlanınca hangi moda giriyorsun?", href: "/testler#stres", meta: "Yeni" },
+    { title: "Karar verme stili", excerpt: "Hız mı, güven mi, sezgi mi?", href: "/testler#karar", meta: "Yeni" },
+    { title: "Sosyal enerji", excerpt: "Şarj olma şeklin: kalabalık mı yalnızlık mı?", href: "/testler#sosyal", meta: "Yeni" },
   ];
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Oneirova",
+    url: "https://www.oneirova.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://www.oneirova.com/search?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Oneirova",
+    url: "https://www.oneirova.com",
+    logo: "https://www.oneirova.com/icons/icon-512.png",
+  };
 
   return (
     <SiteShell mainClassName="pb-24 pt-8 sm:pt-12">
+      <JsonLd data={websiteSchema} />
+      <JsonLd data={orgSchema} />
       <Container>
         {/* Hero Section */}
         <section aria-labelledby="hero-heading">
@@ -337,6 +364,51 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* Günün Rüyası */}
+        {dailyDream && (
+          <section className="mt-14 sm:mt-20" aria-labelledby="daily-dream-heading">
+            <div className="overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-surface to-accent2/5 shadow-lg">
+              <div className="flex items-center gap-3 border-b border-accent/20 px-6 py-4">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                </span>
+                <h2 id="daily-dream-heading" className="font-serif text-lg text-foreground">Gunun Ruyasi</h2>
+              </div>
+              <Link href={`/ruya/${dailyDream.slug}`} className="group block p-6 transition-colors hover:bg-accent/[0.02]">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+                  {dailyDream.coverImageUrl && (
+                    <img
+                      src={dailyDream.coverImageUrl}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-32 w-full rounded-xl object-cover sm:h-28 sm:w-40 transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-serif text-xl font-medium text-foreground transition-colors group-hover:text-accent">
+                      {dailyDream.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted line-clamp-3">{dailyDream.excerpt}</p>
+                    {dailyDream.themes.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {dailyDream.themes.slice(0, 4).map((t) => (
+                          <span key={t} className="rounded-full bg-surface2 px-2.5 py-0.5 text-[11px] font-medium text-muted">{t}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <svg className="hidden h-5 w-5 shrink-0 text-muted transition-transform group-hover:translate-x-1 sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Content Sections */}
         <section className="mt-16 sm:mt-24" aria-labelledby="dreams-section">

@@ -7,7 +7,7 @@ export type BreadcrumbItem = {
 
 function ChevronIcon() {
   return (
-    <svg className="h-4 w-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="h-4 w-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
     </svg>
   );
@@ -33,7 +33,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                   {item.label}
                 </Link>
               ) : (
-                <span className={isLast ? "font-medium text-foreground" : "text-muted"}>
+                <span className={isLast ? "font-medium text-foreground" : "text-muted"} aria-current={isLast ? "page" : undefined}>
                   {isLast && item.label.length > 40 ? item.label.slice(0, 40) + "..." : item.label}
                 </span>
               )}
