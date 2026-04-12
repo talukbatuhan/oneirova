@@ -124,10 +124,10 @@ export function SearchBar({
           goToSearch(query);
         }}
         role="search"
-        className={`relative flex w-full items-center gap-3 rounded-xl border border-border bg-surface shadow-sm transition-all duration-200 ${
+        className={`relative flex w-full items-center gap-2 rounded-xl border border-border bg-surface shadow-sm transition-all duration-200 sm:gap-3 ${
           open && hasQuery ? "rounded-b-none border-b-transparent" : ""
         } focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 ${
-          variant === "hero" ? "px-5 py-4" : "px-4 py-3"
+          variant === "hero" ? "px-3 py-3 sm:px-5 sm:py-4" : "px-3 py-2.5 sm:px-4 sm:py-3"
         }`}
       >
         <SearchIcon className="h-5 w-5 shrink-0 text-muted" />
@@ -186,7 +186,7 @@ export function SearchBar({
         {loading && <LoadingSpinner className="h-5 w-5 text-accent" />}
         <button
           type="submit"
-          className={`shrink-0 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-accent/90 hover:shadow-md active:scale-95 ${
+          className={`shrink-0 rounded-lg bg-accent px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-accent/90 hover:shadow-md active:scale-95 sm:px-5 sm:py-2 sm:text-sm ${
             variant === "compact" ? "hidden sm:block" : ""
           }`}
         >
